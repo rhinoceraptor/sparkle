@@ -1,123 +1,124 @@
 use std::thread;
 use std::time::Duration;
 use std::error::Error;
-use esp_idf_hal::delay::Ets;
-use esp_idf_hal::units::FromValueType;
-use esp_idf_hal::gpio::{AnyInputPin, PinDriver};
-use esp_idf_hal::peripherals::Peripherals;
-use esp_idf_hal::spi::*;
-use ssd1306::{prelude::*, Ssd1306};
-use display_interface_spi::SPIInterface;
+use std::sync::{Arc, Mutex};
+use log::*;
 
-use embedded_graphics::{
-    mono_font::{ascii::*, MonoTextStyle},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    text::Text,
-    primitives::{PrimitiveStyle, Rectangle},
-    Drawable,
-};
+// use uuid::Uuid;
+
+use esp32_nimble::{BLEDevice, BLEScan};
+use esp32_nimble::utilities::BleUuid;
+use esp_idf_hal::task::block_on;
+use esp_idf_hal::peripherals::Peripherals;
+use esp_idf_sys as _;
+// use esp_idf_svc::eventloop::EspSystemEventLoop;
+use esp_idf_svc::log::EspLogger;
+
+pub mod display;
+
+const SPARK_SERVICE_UUID       : BleUuid = BleUuid::Uuid16(0xFFC0);
+const SPARK_BLE_WRITE_CHAR_UUID: BleUuid = BleUuid::Uuid16(0xFFC1);
+const SPARK_BLE_NOTIF_CHAR_UUID: BleUuid = BleUuid::Uuid16(0xFFC2);
+const SPARK_RECV_NOTIF_CHARACTERISTIC: BleUuid = BleUuid::Uuid16(0x2902);
 
 fn main() -> anyhow::Result<(), Box<dyn Error>> {
-    // Initialize peripherals
+    esp_idf_sys::link_patches();
+    // esp_idf_svc::sys::link_patches();
     let peripherals = Peripherals::take()?;
-    let spi = peripherals.spi2;
 
-    let mut rst  = PinDriver::output(peripherals.pins.gpio21)?;
-    let dc   = PinDriver::output(peripherals.pins.gpio19)?;
-    let sclk = peripherals.pins.gpio18;
-    let sda  = peripherals.pins.gpio23;
-    let cs   = peripherals.pins.gpio5;
+    EspLogger::initialize_default();
 
-    let config = config::Config::new()
-        .baudrate(10.MHz().into());
+    let mut my_display = display::Display::new(peripherals)?;
+    thread::sleep(Duration::from_millis(10000));
 
-    // Initialize SPI
-    let device = SpiDeviceDriver::new_single(
-        spi,
-        sclk,
-        sda,
-        Option::<AnyInputPin>::None,
-        Some(cs),
-        &SpiDriverConfig::new(),
-        &config,
-    )?;
+    my_display.display_text("Starting BLE Spark Amp Connector")?;
 
-    let spi_interface = SPIInterface::new(device, dc);
+    thread::sleep(Duration::from_millis(10000));
 
-    // Reset display manually
-    rst.set_low()?;
-    Ets::delay_ms(50);
-    rst.set_high()?;
-    Ets::delay_ms(50);
 
-    // Initialize display
-    let mut display = Ssd1306::new(spi_interface, DisplaySize128x64, DisplayRotation::Rotate0)
-        .into_buffered_graphics_mode();
+    my_display.display_text("Starting scan")?;
 
-    display.init().unwrap();
-    display.flush().unwrap();
+    // let found_devices = Arc::new(Mutex::new(Vec::new()));
 
-    let fonts = [
-        FONT_4X6,
-        FONT_5X7,
-        FONT_5X8,
-        FONT_6X10,
-        FONT_6X12,
-        FONT_6X13,
-        FONT_6X13_ITALIC,
-        FONT_6X9,
-        FONT_7X13,
-        FONT_7X13_ITALIC,
-        FONT_7X14,
-        FONT_8X13,
-        FONT_8X13_ITALIC,
-        FONT_9X15,
-        FONT_9X18,
-        FONT_10X20,
-    ];
+    // block_on(async {
+    //     let ble_device = BLEDevice::take();
+    //     let mut ble_scan = BLEScan::new();
+    //     let found_devices_clone = found_devices.clone();
 
-    let font_names = [
-        "FONT_4X6",
-        "FONT_5X7",
-        "FONT_5X8",
-        "FONT_6X10",
-        "FONT_6X12",
-        "FONT_6X13",
-        "FONT_6X13_ITALIC",
-        "FONT_6X9",
-        "FONT_7X13",
-        "FONT_7X13_ITALIC",
-        "FONT_7X14",
-        "FONT_8X13",
-        "FONT_8X13_ITALIC",
-        "FONT_9X15",
-        "FONT_9X18",
-        "FONT_10X20",
-    ];
+    //     let dev = ble_scan
+    //         .active_scan(true)
+    //         .interval(100)
+    //         .window(99)
+    //         .start(ble_device, 10000, |device, data| {
+    //         if data.is_advertising_service(&SPARK_SERVICE_UUID) {
+    //             let mut list = found_devices_clone.lock().unwrap();
+    //             list.push(*device);
 
-    let mut i = 0;
+    //             return Some(*device);
+    //         }
+    //         None
+    //     }).await?;
+
+    //     let _ = my_display.display_text("Scan done");
+    //     let devices = found_devices.lock().unwrap();
+    //     let _ = my_display.display_text(&format!("Found {} amps", devices.len()));
+    //     for d in devices.iter() {
+    //         let _ = my_display.display_text(&format!("Device {:?}", d));
+    //     }
+
+    //     if let Some(dev) = dev {
+    //         let _ = my_display.display_text(&format!("Dev {:?}", dev));
+    //         let mut client = ble_device.new_client();
+    //         client.connect(&dev.addr()).await?;
+
+    //         let service = client.get_service(SPARK_SERVICE_UUID).await?;
+    //         let characteristic = service.get_characteristic(SPARK_BLE_NOTIF_CHAR_UUID).await?;
+    //         if characteristic.can_notify() {
+    //             info!("subscribing");
+    //             let data = [0x1, 0x0];
+    //             characteristic
+    //                 .get_descriptor(SPARK_RECV_NOTIF_CHARACTERISTIC)
+    //                 .await?
+    //                 .write_value(&data, true)
+    //                 .await?;
+    //             characteristic.on_notify(|data| {
+    //                 let text = core::str::from_utf8(data).unwrap();
+    //                 info!("data: {}", text);
+    //             }).subscribe_notify(false)
+    //             .await?;
+    //         }
+
+    //     } else {
+    //         info!("No dev");
+    //     }
+
+    //     anyhow::Ok(())
+    // })?;
+    let brk = false;
 
     loop {
-        // Draw "Hello, world!"
-        let text_style = MonoTextStyle::new(&fonts[i], BinaryColor::On);
-        let text = format!("\n{}\nabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789", &font_names[i]);
-        Text::new(&text, Point::zero(), text_style).draw(&mut display).unwrap();
-        display.flush().unwrap();
+        // let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
+        // let text = format!("\nHello World");
+        // Text::new(&text, Point::zero(), text_style).draw(&mut display).unwrap();
+        // display.flush().unwrap();
+
+        // thread::sleep(Duration::from_millis(3000));
+        // let clear = Rectangle::new(
+        //     Point::new(0, 0),
+        //     display.bounding_box().size,
+        // )
+        // .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
+
+        // clear.draw(&mut display).unwrap();
+        // display.flush().unwrap();
+
+        my_display.display_text("Loop")?;
+
         thread::sleep(Duration::from_millis(1000));
-        i += 1;
-        if i == fonts.len() {
-            i = 0;
+
+        if brk {
+            break;
         }
-
-        let clear = Rectangle::new(
-            Point::new(0, 0),
-            display.bounding_box().size,
-        )
-        .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
-
-        clear.draw(&mut display).unwrap();
-        display.flush().unwrap();
     }
 
     Ok(())
