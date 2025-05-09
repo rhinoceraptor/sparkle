@@ -65,21 +65,15 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
         FONT_6X10,
         FONT_6X12,
         FONT_6X13,
-        FONT_6X13_BOLD,
         FONT_6X13_ITALIC,
         FONT_6X9,
         FONT_7X13,
-        FONT_7X13_BOLD,
         FONT_7X13_ITALIC,
         FONT_7X14,
-        FONT_7X14_BOLD,
         FONT_8X13,
-        FONT_8X13_BOLD,
         FONT_8X13_ITALIC,
         FONT_9X15,
-        FONT_9X15_BOLD,
         FONT_9X18,
-        FONT_9X18_BOLD,
         FONT_10X20,
     ];
 
@@ -90,21 +84,15 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
         "FONT_6X10",
         "FONT_6X12",
         "FONT_6X13",
-        "FONT_6X13_BOLD",
         "FONT_6X13_ITALIC",
         "FONT_6X9",
         "FONT_7X13",
-        "FONT_7X13_BOLD",
         "FONT_7X13_ITALIC",
         "FONT_7X14",
-        "FONT_7X14_BOLD",
         "FONT_8X13",
-        "FONT_8X13_BOLD",
         "FONT_8X13_ITALIC",
         "FONT_9X15",
-        "FONT_9X15_BOLD",
         "FONT_9X18",
-        "FONT_9X18_BOLD",
         "FONT_10X20",
     ];
 
@@ -113,7 +101,7 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
     loop {
         // Draw "Hello, world!"
         let text_style = MonoTextStyle::new(&fonts[i], BinaryColor::On);
-        let text = format!("\n{}\nabcdefghijklmnopqrstuvwxyz\nNABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789", &font_names[i]);
+        let text = format!("\n{}\nabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789", &font_names[i]);
         Text::new(&text, Point::zero(), text_style).draw(&mut display).unwrap();
         display.flush().unwrap();
         thread::sleep(Duration::from_millis(1000));
