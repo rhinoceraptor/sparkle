@@ -23,77 +23,67 @@ const SPARK_RECV_NOTIF_CHARACTERISTIC: BleUuid = BleUuid::Uuid16(0x2902);
 
 fn main() -> anyhow::Result<(), Box<dyn Error>> {
     esp_idf_sys::link_patches();
-    // esp_idf_svc::sys::link_patches();
     let peripherals = Peripherals::take()?;
-
     EspLogger::initialize_default();
 
     let mut my_display = display::Display::new(peripherals)?;
-    thread::sleep(Duration::from_millis(10000));
-
-    my_display.display_text("Starting BLE Spark Amp Connector")?;
-
-    thread::sleep(Duration::from_millis(10000));
-
-
     my_display.display_text("Starting scan")?;
 
-    // let found_devices = Arc::new(Mutex::new(Vec::new()));
+    let found_devices = Arc::new(Mutex::new(Vec::new()));
 
-    // block_on(async {
-    //     let ble_device = BLEDevice::take();
-    //     let mut ble_scan = BLEScan::new();
-    //     let found_devices_clone = found_devices.clone();
+    block_on(async {
+        let ble_device = BLEDevice::take();
+        let mut ble_scan = BLEScan::new();
+        let found_devices_clone = found_devices.clone();
 
-    //     let dev = ble_scan
-    //         .active_scan(true)
-    //         .interval(100)
-    //         .window(99)
-    //         .start(ble_device, 10000, |device, data| {
-    //         if data.is_advertising_service(&SPARK_SERVICE_UUID) {
-    //             let mut list = found_devices_clone.lock().unwrap();
-    //             list.push(*device);
+        let dev = ble_scan
+            .active_scan(true)
+            .interval(100)
+            .window(99)
+            .start(ble_device, 10000, |device, data| {
+            if data.is_advertising_service(&SPARK_SERVICE_UUID) {
+                let mut list = found_devices_clone.lock().unwrap();
+                list.push(*device);
 
-    //             return Some(*device);
-    //         }
-    //         None
-    //     }).await?;
+                return Some(*device);
+            }
+            None
+        }).await?;
 
-    //     let _ = my_display.display_text("Scan done");
-    //     let devices = found_devices.lock().unwrap();
-    //     let _ = my_display.display_text(&format!("Found {} amps", devices.len()));
-    //     for d in devices.iter() {
-    //         let _ = my_display.display_text(&format!("Device {:?}", d));
-    //     }
+        let devices = found_devices.lock().unwrap();
+        let _ = my_display.display_text(&format!("Found {} amps", devices.len()));
+        for d in devices.iter() {
+            let _ = my_display.display_text(&format!("Device {:?}", d));
+        }
 
-    //     if let Some(dev) = dev {
-    //         let _ = my_display.display_text(&format!("Dev {:?}", dev));
-    //         let mut client = ble_device.new_client();
-    //         client.connect(&dev.addr()).await?;
+        if let Some(dev) = dev {
+            let _ = my_display.display_text(&format!("Dev {:?}", dev));
+            let mut client = ble_device.new_client();
+            client.connect(&dev.addr()).await?;
 
-    //         let service = client.get_service(SPARK_SERVICE_UUID).await?;
-    //         let characteristic = service.get_characteristic(SPARK_BLE_NOTIF_CHAR_UUID).await?;
-    //         if characteristic.can_notify() {
-    //             info!("subscribing");
-    //             let data = [0x1, 0x0];
-    //             characteristic
-    //                 .get_descriptor(SPARK_RECV_NOTIF_CHARACTERISTIC)
-    //                 .await?
-    //                 .write_value(&data, true)
-    //                 .await?;
-    //             characteristic.on_notify(|data| {
-    //                 let text = core::str::from_utf8(data).unwrap();
-    //                 info!("data: {}", text);
-    //             }).subscribe_notify(false)
-    //             .await?;
-    //         }
+            let service = client.get_service(SPARK_SERVICE_UUID).await?;
+            let characteristic = service.get_characteristic(SPARK_BLE_NOTIF_CHAR_UUID).await?;
+            if characteristic.can_notify() {
+                info!("subscribing");
+                let data = [0x1, 0x0];
+                characteristic
+                    .get_descriptor(SPARK_RECV_NOTIF_CHARACTERISTIC)
+                    .await?
+                    .write_value(&data, true)
+                    .await?;
+                characteristic.on_notify(|data| {
+                    let text = core::str::from_utf8(data).unwrap();
+                    info!("data: {}", text);
+                }).subscribe_notify(false)
+                .await?;
+            }
 
-    //     } else {
-    //         info!("No dev");
-    //     }
+        } else {
+            info!("No dev");
+        }
 
-    //     anyhow::Ok(())
-    // })?;
+        anyhow::Ok(())
+    })?;
     let brk = false;
 
     loop {
