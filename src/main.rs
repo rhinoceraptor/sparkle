@@ -1,5 +1,7 @@
 #![no_std]
 #![no_main]
+#![feature(alloc_error_handler)]
+
 extern crate alloc;
 
 use bleps::{
@@ -17,22 +19,30 @@ use esp_wifi::{
     EspWifiController,
     ble::controller::BleConnector,
 };
+use esp_alloc::EspHeap;
+use core::alloc::Layout;
+
+pub mod spark_message;
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 
-pub mod spark_message;
+// #[global_allocator]
+// static ALLOCATOR: EspHeap = esp_alloc::heap_allocator!(size: 72 * 1024);
+
+#[alloc_error_handler]
+fn alloc_error_handler(layout: Layout) -> ! {
+    panic!("allocation error: {:?}", layout)
+}
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
-    // generator version: 0.3.1
+    esp_alloc::heap_allocator!(size: 72 * 1024);
 
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
-
-    esp_alloc::heap_allocator!(size: 72 * 1024);
 
     let timer0 = TimerGroup::new(peripherals.TIMG1);
     esp_hal_embassy::init(timer0.timer0);

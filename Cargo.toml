@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [[bin]]
 name = "sparkle"
-path = "./src/bin/main.rs"
+path = "./src/main.rs"
 
 [dependencies]
 embassy-net = { version = "0.6.0", features = [
