@@ -15,11 +15,11 @@ use esp_idf_sys as _;
 use esp_idf_svc::log::EspLogger;
 
 pub mod display;
+pub mod spark_message;
 
 const SPARK_SERVICE_UUID       : BleUuid = BleUuid::Uuid16(0xFFC0);
 const SPARK_BLE_WRITE_CHAR_UUID: BleUuid = BleUuid::Uuid16(0xFFC1);
 const SPARK_BLE_NOTIF_CHAR_UUID: BleUuid = BleUuid::Uuid16(0xFFC2);
-const SPARK_RECV_NOTIF_CHARACTERISTIC: BleUuid = BleUuid::Uuid16(0x2902);
 
 fn main() -> anyhow::Result<(), Box<dyn Error>> {
     esp_idf_sys::link_patches();
@@ -42,6 +42,7 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
             .window(99)
             .start(ble_device, 10000, |device, data| {
             if data.is_advertising_service(&SPARK_SERVICE_UUID) {
+                info!("Found device {:?} {:?}", device, data);
                 let mut list = found_devices_clone.lock().unwrap();
                 list.push(*device);
 
@@ -50,31 +51,23 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
             None
         }).await?;
 
-        let devices = found_devices.lock().unwrap();
-        let _ = my_display.display_text(&format!("Found {} amps", devices.len()));
-        for d in devices.iter() {
-            let _ = my_display.display_text(&format!("Device {:?}", d));
-        }
-
         if let Some(dev) = dev {
-            let _ = my_display.display_text(&format!("Dev {:?}", dev));
             let mut client = ble_device.new_client();
+            client.on_connect(|client| {
+                info!("Connected");
+                client.update_conn_params(120, 120, 0, 60).unwrap();
+            });
             client.connect(&dev.addr()).await?;
 
             let service = client.get_service(SPARK_SERVICE_UUID).await?;
             let characteristic = service.get_characteristic(SPARK_BLE_NOTIF_CHAR_UUID).await?;
+            info!("characteristic: {:?}", characteristic);
             if characteristic.can_notify() {
                 info!("subscribing");
-                let data = [0x1, 0x0];
-                characteristic
-                    .get_descriptor(SPARK_RECV_NOTIF_CHARACTERISTIC)
-                    .await?
-                    .write_value(&data, true)
-                    .await?;
                 characteristic.on_notify(|data| {
                     let text = core::str::from_utf8(data).unwrap();
                     info!("data: {}", text);
-                }).subscribe_notify(false)
+                }).subscribe_notify(true)
                 .await?;
             }
 
@@ -84,26 +77,10 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
 
         anyhow::Ok(())
     })?;
+
     let brk = false;
 
     loop {
-        // let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
-        // let text = format!("\nHello World");
-        // Text::new(&text, Point::zero(), text_style).draw(&mut display).unwrap();
-        // display.flush().unwrap();
-
-        // thread::sleep(Duration::from_millis(3000));
-        // let clear = Rectangle::new(
-        //     Point::new(0, 0),
-        //     display.bounding_box().size,
-        // )
-        // .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
-
-        // clear.draw(&mut display).unwrap();
-        // display.flush().unwrap();
-
-        my_display.display_text("Loop")?;
-
         thread::sleep(Duration::from_millis(1000));
 
         if brk {
