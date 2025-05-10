@@ -1,9 +1,9 @@
 use std::error::Error;
-use esp_idf_hal::delay::Delay;
-use esp_idf_hal::gpio::*;
-use esp_idf_hal::peripherals::Peripherals;
-use esp_idf_hal::spi::*;
-use esp_idf_hal::units::FromValueType;
+use esp_idf_svc::hal::delay::Delay;
+use esp_idf_svc::hal::gpio::*;
+use esp_idf_svc::hal::peripherals::Peripherals;
+use esp_idf_svc::hal::spi::*;
+use esp_idf_svc::hal::units::FromValueType;
 use log::*;
 
 use embedded_graphics::{
@@ -75,9 +75,9 @@ impl Display {
             Point::new(0, 0),
             self.display.bounding_box().size,
         )
-        .into_styled(PrimitiveStyle::with_fill(BinaryColor::On));
+        .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
 
-        let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::Off);
+        let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
         let display_text = format!("\n{}", text);
 
         clear.draw(&mut self.display).unwrap();
