@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 use std::error::Error;
-use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
 use log::*;
 
 use esp32_nimble::{BLEDevice, BLEScan};
@@ -27,27 +27,11 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
     let mut my_display = display::Display::new(peripherals)?;
     my_display.display_text("Starting scan")?;
 
-    let (tx, rx): (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>) = mpsc::channel();
-
-    thread::spawn(move || {
-        while let Ok(data) = rx.recv() {
-            let decoder = spark_message::SparkMsgDecoder;
-            let msg = decoder.decode(&data);
-            match msg {
-                Some(spark_message::SparkToAppMsg::AmpName { sequence, name }) => {
-                    info!("Amp Name: {}", name);
-                    logger().flush();
-                    // my_display.display_text("test");
-                }
-                _ => {}
-            }
-        }
-    });
+    let display = Arc::new(Mutex::new(my_display));
 
     block_on(async {
         let ble_device = BLEDevice::take();
         let mut ble_scan = BLEScan::new();
-        let tx_cb = tx.clone();
 
         let dev = ble_scan
             .active_scan(true)
@@ -82,7 +66,15 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
                 info!("subscribing");
                 logger().flush();
                 characteristic.on_notify(move |data: &[u8]| {
-                    tx_cb.send(data.to_vec());
+                    let decoder = spark_message::SparkMsgDecoder;
+                    let msg = decoder.decode(&data);
+                    match msg {
+                        Some(spark_message::SparkToAppMsg::AmpName { sequence, name }) => {
+                            let mut d = display.lock().unwrap();
+                            d.display_text(&format!("Connected to:\n{}", name));
+                        }
+                        _ => {}
+                    }
                     ()
                 }).subscribe_notify(false)
                 .await?;
