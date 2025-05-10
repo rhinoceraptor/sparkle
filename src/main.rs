@@ -35,7 +35,7 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
             let msg = decoder.decode(&data);
             match msg {
                 Some(spark_message::SparkToAppMsg::AmpName { sequence, name }) => {
-                    info!("{}", name);
+                    info!("Amp Name: {}", name);
                     logger().flush();
                     // my_display.display_text("test");
                 }
@@ -99,16 +99,14 @@ fn main() -> anyhow::Result<(), Box<dyn Error>> {
             let write_characteristic = service.get_characteristic(SPARK_BLE_WRITE_CHAR_UUID).await?;
 
             loop {
-                info!("cool loop");
-
-                thread::sleep(Duration::from_millis(8000));
-
                 let blocks = encoder.encode(msg);
                 for block in blocks {
                     info!("Send block {:02X?}", block);
                     logger().flush();
                     write_characteristic.write_value(&block, false).await?;
                 }
+
+                thread::sleep(Duration::from_millis(8000));
             }
 
         } else {

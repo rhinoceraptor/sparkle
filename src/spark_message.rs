@@ -201,14 +201,23 @@ impl SparkMsgDecoder {
         if hdr.magic     != BLOCK_MAGIC { return None; }
         if hdr.direction != Direction::FromSpark as u16 { return None; }
 
-        let (chunk_hdr, chunk_body) = ChunkHeader::read_from_prefix(&body).ok()?;
+        Self::decode_chunk(body)
+    }
+
+    // TODO: implement multi-chunk parsing
+    fn decode_chunk(buf: &[u8]) -> Option<(u8, u8, u8, &[u8])> {
+        let (chunk_hdr, chunk_body) = ChunkHeader::read_from_prefix(&buf).ok()?;
         if chunk_hdr.start != 0xF0 || chunk_hdr.sysex_id != 0x01 { return None; }
 
         Some((chunk_hdr.sequence, chunk_hdr.command, chunk_hdr.sub_command, chunk_body))
     }
 
     pub fn decode(&self, block: &[u8]) -> Option<SparkToAppMsg> {
-        let (sequence, command, subcommand, payload) = Self::decode_block(block)?;
+        let blk  = Self::decode_block(block);
+        let chnk = Self::decode_chunk(block);
+
+        // Spark 2 seems not to wrap chunks in blocks sometimes???
+        let (sequence, command, subcommand, payload) = blk.or(chnk)?;
 
         let raw = Self::decode_7bit(payload);
 
@@ -217,7 +226,6 @@ impl SparkMsgDecoder {
             (0x03, 0x11) => {
                 if raw.len() < 1 {  return None; }
                 let name_len = raw[0] as usize;
-                // if raw.len() < 1 + name_len { info!("decode raw len < name_len"); return None; }
                 let name_bytes = &raw[2..name_len+2];
                 let name = String::from_utf8(name_bytes.to_vec()).ok()?;
                 Some(SparkToAppMsg::AmpName {
