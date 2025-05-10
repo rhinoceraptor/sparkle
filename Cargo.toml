@@ -42,15 +42,17 @@ esp-hal-embassy = { version = "0.7.0", features = ["esp32"] }
 esp-wifi = { version = "0.13.0", features = [
   "ble",
   "builtin-scheduler",
-  "coex",
   "esp-alloc",
   "esp32",
-  "log",
-  "wifi",
+  "log"
 ] }
 heapless = { version = "0.8.0", default-features = false }
 static_cell = { version = "2.1.0", features = ["nightly"] }
 esp-println = { version = "0.13.1", features = ["esp32"] }
+zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
+
+[profile.dev.package.esp-wifi]
+opt-level = 3
 
 [profile.dev]
 # Rust debug is too slow.

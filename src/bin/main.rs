@@ -1,18 +1,29 @@
 #![no_std]
 #![no_main]
+extern crate alloc;
 
+use bleps::{
+    asynch::Ble,
+};
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
-use esp_hal::clock::CpuClock;
-use esp_hal::timer::timg::TimerGroup;
+use esp_hal::{
+    clock::CpuClock,
+    timer::timg::TimerGroup,
+    time,
+};
 use esp_println::println;
+use esp_wifi::{
+    EspWifiController,
+    ble::controller::BleConnector,
+};
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
     loop {}
 }
 
-extern crate alloc;
+pub mod spark_message;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
@@ -27,12 +38,17 @@ async fn main(spawner: Spawner) {
     esp_hal_embassy::init(timer0.timer0);
 
     let timer1 = TimerGroup::new(peripherals.TIMG0);
-    let _init = esp_wifi::init(
+    let esp_wifi_ctrl = esp_wifi::init(
         timer1.timer0,
         esp_hal::rng::Rng::new(peripherals.RNG),
         peripherals.RADIO_CLK,
     )
     .unwrap();
+
+    let connector = BleConnector::new(&esp_wifi_ctrl, peripherals.BT);
+    let now = || time::Instant::now().duration_since_epoch().as_millis();
+    let mut ble = Ble::new(connector, now);
+    println!("{:?}", ble.init().await);
 
     // TODO: Spawn some tasks
     let _ = spawner;
