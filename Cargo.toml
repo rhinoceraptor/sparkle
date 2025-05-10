@@ -50,6 +50,8 @@ heapless = { version = "0.8.0", default-features = false }
 static_cell = { version = "2.1.0", features = ["nightly"] }
 esp-println = { version = "0.13.1", features = ["esp32"] }
 zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
+uuid = { version = "1.16.0", default-features = false }
+embassy-futures = "0.1.1"
 
 [profile.dev.package.esp-wifi]
 opt-level = 3

@@ -1138,6 +1138,7 @@ dependencies = [
  "bleps",
  "critical-section",
  "embassy-executor",
+ "embassy-futures",
  "embassy-net",
  "embassy-time",
  "embedded-io",
@@ -1150,6 +1151,7 @@ dependencies = [
  "heapless",
  "smoltcp",
  "static_cell",
+ "uuid",
  "zerocopy",
 ]
 
