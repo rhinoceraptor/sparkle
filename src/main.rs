@@ -1,22 +1,10 @@
+#![allow(warnings)]
 #![no_std]
 #![no_main]
 #![feature(alloc_error_handler)]
 
 extern crate alloc;
 
-use bleps::{
-    Ble,
-    HciConnector,
-    ad_structure::{
-        AdStructure,
-        BR_EDR_NOT_SUPPORTED,
-        LE_GENERAL_DISCOVERABLE,
-        create_advertising_data,
-    },
-    attribute_server::{AttributeServer, NotificationData, WorkResult},
-    gatt,
-    att::Uuid,
-};
 use embassy_executor::Spawner;
 use embassy_futures::yield_now;
 use embassy_time::{Duration, Timer};
@@ -34,6 +22,8 @@ use esp_wifi::{
 };
 use esp_alloc::EspHeap;
 use core::alloc::Layout;
+use alloc::vec::Vec;
+use alloc::string::String;
 
 pub mod spark_message;
 
@@ -45,6 +35,116 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 #[alloc_error_handler]
 fn alloc_error_handler(layout: Layout) -> ! {
     panic!("allocation error: {:?}", layout)
+}
+
+// {0xB4, 0xE6, 0x2D, 0xB2, 0x1B, 0x36}
+// Define our custom BLE scanner struct
+pub struct BleScanner<'a> {
+    ble: Ble<'a>,
+    target_service_uuid: u16,
+    discovered_devices: Vec<DiscoveredDevice>,
+}
+
+// Structure to hold discovered device information
+#[derive(Debug, Clone)]
+pub struct DiscoveredDevice {
+    address: [u8; 6],
+    address_type: PeerAddressType,
+    rssi: i8,
+    has_target_service: bool,
+    ad_data: Vec<u8>,
+    local_name: Option<String>,
+}
+
+impl<'a> BleScanner<'a> {
+    pub fn new(connector: &'a dyn HciConnection, target_service_uuid: u16) -> Self {
+        BleScanner {
+            ble: Ble::new(connector),
+            target_service_uuid,
+            discovered_devices: Vec::new(),
+        }
+    }
+
+    pub fn init(&mut self) -> Result<(), Error> {
+        // Initialize the BLE controller
+        self.ble.init()?;
+
+        // Read the Bluetooth address (optional, but useful for debugging)
+        match self.ble.cmd_read_br_addr() {
+            Ok(addr) => {
+                println!("Local Bluetooth address: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                    addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+            }
+            Err(e) => {
+                println!("Failed to read Bluetooth address: {:?}", e);
+            }
+        }
+
+        Ok(())
+    }
+
+    // pub fn start_scanning(&mut self) -> Result<(), Error> {
+    //     // Set scan parameters
+    //     self.set_scan_parameters(true, 0x0010, 0x0010, false, false)?;
+
+    //     // Enable scanning
+    //     self.set_scan_enable(true, false)?;
+
+    //     println!("Scanning started for service UUID 0x{:04X}...", self.target_service_uuid);
+    //     Ok(())
+    // }
+
+    // pub fn stop_scanning(&mut self) -> Result<(), Error> {
+    //     // Disable scanning
+    //     self.set_scan_enable(false, false)?;
+
+    //     println!("Scanning stopped");
+    //     Ok(())
+    // }
+
+    // pub fn set_scan_parameters(
+    //     &mut self,
+    //     active_scanning: bool,
+    //     scan_interval: u16,
+    //     scan_window: u16,
+    //     own_address_random: bool,
+    //     filter_policy: bool,
+    // ) -> Result<EventType, Error> {
+    //     self.ble.write_bytes(
+    //         Command::LeSetScanParameters {
+    //             active: active_scanning,
+    //             interval: scan_interval,
+    //             window: scan_window,
+    //             own_address_type: if own_address_random { 1 } else { 0 },
+    //             filter_policy: if filter_policy { 1 } else { 0 },
+    //         }
+    //         .encode()
+    //         .as_slice(),
+    //     );
+
+    //     self.ble
+    //         .wait_for_command_complete(LE_OGF, SET_SCAN_PARAMETERS_OCF)?
+    //         .check_command_completed()
+    // }
+
+    // pub fn set_scan_enable(
+    //     &mut self,
+    //     enable: bool,
+    //     filter_duplicates: bool,
+    // ) -> Result<EventType, Error> {
+    //     self.ble.write_bytes(
+    //         Command::LeSetScanEnable {
+    //             enable,
+    //             filter_duplicates,
+    //         }
+    //         .encode()
+    //         .as_slice(),
+    //     );
+
+    //     self.ble
+    //         .wait_for_command_complete(LE_OGF, SET_SCAN_ENABLE_OCF)?
+    //         .check_command_completed()
+    // }
 }
 
 #[esp_hal_embassy::main]
@@ -81,7 +181,7 @@ async fn main(spawner: Spawner) {
             create_advertising_data(&[
                 AdStructure::Flags(LE_GENERAL_DISCOVERABLE | BR_EDR_NOT_SUPPORTED),
                 AdStructure::ServiceUuids16(&[Uuid::Uuid16(0x1809)]),
-                AdStructure::CompleteLocalName(esp_hal::chip!()),
+                AdStructure::CompleteLocalName(),
             ])
             .unwrap()
         )
