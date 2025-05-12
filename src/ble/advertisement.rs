@@ -1,3 +1,4 @@
+
 #[derive(Clone, Debug)]
 pub enum ServiceUuid {
     Uuid16(u16),
@@ -23,6 +24,7 @@ impl From<[u8; 16]> for ServiceUuid {
     }
 }
 
+#[allow(dead_code)]
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum AdvertisementType {

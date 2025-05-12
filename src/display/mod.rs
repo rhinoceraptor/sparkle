@@ -1,59 +1,73 @@
-#![no_std]
-use display_interface_spi::SPIInterface;
+use esp_println::println;
+use esp_hal::{
+    Async,
+    spi::{Mode, master::{Config, Spi}},
+    gpio::{GpioPin, Level, Input, InputConfig, Output, OutputConfig, Pull},
+    clock::CpuClock,
+    time::Rate,
+    timer::OneShotTimer,
+    peripherals::{SPI3, Peripherals},
+};
+use esp_hal::timer::timg::Timer as EspTimer;
+use embedded_graphics::{
+    mono_font::{ascii::*, MonoTextStyle},
+    pixelcolor::BinaryColor,
+    prelude::*,
+    text::Text,
+    primitives::{PrimitiveStyle, Rectangle},
+    Drawable,
+};
+use ssd1306::mode::BufferedGraphicsModeAsync;
+use ssd1306::size::DisplaySize128x64;
+use ssd1306::prelude::*;
+use ssd1306::Ssd1306Async;
 
-pub struct Display {
-    display: Ssd1306Async<
-        SPIInterface,
+
+#[embassy_executor::task]
+pub async fn run(
+    sclk:  GpioPin<'static, 18>,
+    mosi:  GpioPin<'static, 19>,
+    rst:   GpioPin<'static, 4>,
+    cs:    GpioPin<'static, 5>,
+    dc:    GpioPin<'static, 2>,
+    timer: EspTimer<'static>,
+    spi:   SPI3<'static>,
+) {
+
+    let mut rst = Output::new(rst, Level::Low, OutputConfig::default());
+    let cs      = Output::new(cs, Level::Low, OutputConfig::default());
+    let dc      = Output::new(dc, Level::Low, OutputConfig::default());
+
+    let config = Config::default().with_frequency(Rate::from_khz(100)).with_mode(Mode::_0);
+    let spi = Spi::new(spi, config)
+        .unwrap()
+        .with_sck(sclk)
+        .with_mosi(mosi)
+        .into_async();
+
+    let spi = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(spi, cs).unwrap();
+    let spi = display_interface_spi::SPIInterface::new(spi, dc);
+
+    let mut display = Ssd1306Async::new(
+        spi,
         DisplaySize128x64,
-        BufferedGraphicsModeAsync<DisplaySize128x64>,
-    >
+        DisplayRotation::Rotate0
+    ).into_buffered_graphics_mode();
+
+    let mut delay = OneShotTimer::new(timer).into_async();
+    display.reset(&mut rst, &mut delay).await.unwrap();
+
+    display.init().await.unwrap();
+    let clear = Rectangle::new(
+        Point::new(0, 0),
+        display.bounding_box().size,
+    )
+    .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
+
+    let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
+    let display_text = "\nHello world";
+
+    clear.draw(&mut display).unwrap();
+    Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
+    display.flush().await.unwrap();
 }
-
-#[derive(Debug)]
-pub enum DisplayError {
-    ResetFailed,
-    InitFailed,
-}
-
-impl Display {
-    pub async fn new(
-        spi: SPIBUS,
-        mut reset: Output<'a>,
-        mut dc: Output<'a>
-) -> Result<Self, DisplayError> {
-        let interface = SPIInterface::new(spi_dev, dc);
-        let mut display = Ssd1306Async::new(
-            interface,
-            DisplaySize128x64,
-            DisplayRotation::Rotate0
-        ).into_buffered_graphics_mode();
-
-        display.reset(&mut reset, &mut embassy_time::Delay {})
-            .await
-            .map_err(|_| DisplayError::ResetFailed)?;
-
-        display.init().await.map_err(|_| DisplayError::InitFailed)?;
-
-        Ok(Self {
-            display,
-        })
-    }
-
-    // pub fn display_text(&mut self, text: &str) -> anyhow::Result<(), Box<dyn Error>> {
-    //     info!("{}", text);
-    //     let clear = Rectangle::new(
-    //         Point::new(0, 0),
-    //         self.display.bounding_box().size,
-    //     )
-    //     .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
-
-    //     let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
-    //     let display_text = format!("\n{}", text);
-
-    //     clear.draw(&mut self.display).unwrap();
-    //     Text::new(&display_text, Point::zero(), text_style).draw(&mut self.display).unwrap();
-    //     self.display.flush().unwrap();
-    //     Ok(())
-    // }
-}
-

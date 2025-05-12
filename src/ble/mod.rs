@@ -8,7 +8,12 @@ use esp_println::println;
 use esp_wifi::ble::controller::BleConnector;
 
 #[embassy_executor::task]
-pub async fn run(timer: EspTimer<'static>, rng: RNG<'static>, clk: RADIO_CLK<'static>, bt: BT<'static>) {
+pub async fn run(
+    timer: EspTimer<'static>,
+    rng: RNG<'static>,
+    clk: RADIO_CLK<'static>,
+    bt: BT<'static>
+) {
     let init = esp_wifi::init(
         timer,
         esp_hal::rng::Rng::new(rng),
