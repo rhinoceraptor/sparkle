@@ -1,3 +1,4 @@
+#![no_std]
 use esp_hal::gpio::Output;
 use esp_hal::spi::master::Spi;
 use esp_hal::delay::Delay;
@@ -19,11 +20,11 @@ use ssd1306::size::DisplaySize128x64;
 use ssd1306::prelude::*;
 use ssd1306::Ssd1306Async;
 
-pub struct Display<'a> {
+pub struct Display<SPIBUS, DC> {
     display: Ssd1306Async<
-        SPIInterface<Spi<'a, Async>, Output<'a>>,
+        SPIInterface<SPIBUS, DC>,
         DisplaySize128x64,
-        BufferedGraphicsModeAsync<DisplaySize128x64>
+        BufferedGraphicsModeAsync<DisplaySize128x64>,
     >
 }
 
@@ -33,9 +34,16 @@ pub enum DisplayError {
     InitFailed,
 }
 
-impl<'a> Display<'a> {
-    pub async fn new(spi: Spi<'a, Async>, mut reset: Output<'a>, mut dc: Output<'a>) -> Result<Display<'a>, DisplayError> {
-        let interface = SPIInterface::new(spi, dc);
+impl<'a, SPIBUS> Display<SPIBUS, Output<'a>>
+where
+    SPIBUS: embedded_hal::spi::SpiDevice + 'static,
+{
+    pub async fn new(
+        spi_dev: SPIBUS,
+        mut reset: Output<'a>,
+        mut dc: Output<'a>
+) -> Result<Self, DisplayError> {
+        let interface = SPIInterface::new(spi_dev, dc);
         let mut display = Ssd1306Async::new(
             interface,
             DisplaySize128x64,
@@ -49,7 +57,7 @@ impl<'a> Display<'a> {
         display.init().await.map_err(|_| DisplayError::InitFailed)?;
 
         Ok(Self {
-            display
+            display,
         })
     }
 
