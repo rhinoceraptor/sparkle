@@ -1,28 +1,9 @@
 #![no_std]
-use esp_hal::gpio::Output;
-use esp_hal::spi::master::Spi;
-use esp_hal::delay::Delay;
-use esp_hal::Async;
-use embassy_sync::mutex::Mutex;
-use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
-use embassy_embedded_hal::shared_bus::asynch::spi::SpiDevice;
+use display_interface_spi::SPIInterface;
 
-use embedded_graphics::{
-    mono_font::{ascii::*, MonoTextStyle},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    text::Text,
-    primitives::{PrimitiveStyle, Rectangle},
-    Drawable,
-};
-use ssd1306::mode::BufferedGraphicsModeAsync;
-use ssd1306::size::DisplaySize128x64;
-use ssd1306::prelude::*;
-use ssd1306::Ssd1306Async;
-
-pub struct Display<SPIBUS, DC> {
+pub struct Display {
     display: Ssd1306Async<
-        SPIInterface<SPIBUS, DC>,
+        SPIInterface,
         DisplaySize128x64,
         BufferedGraphicsModeAsync<DisplaySize128x64>,
     >
@@ -34,12 +15,9 @@ pub enum DisplayError {
     InitFailed,
 }
 
-impl<'a, SPIBUS> Display<SPIBUS, Output<'a>>
-where
-    SPIBUS: embedded_hal::spi::SpiDevice + 'static,
-{
+impl Display {
     pub async fn new(
-        spi_dev: SPIBUS,
+        spi: SPIBUS,
         mut reset: Output<'a>,
         mut dc: Output<'a>
 ) -> Result<Self, DisplayError> {

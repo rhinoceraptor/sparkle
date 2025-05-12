@@ -1,5 +1,8 @@
 #![no_std]
 #![no_main]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
 
 use embassy_time::{Duration, Timer};
 use embassy_executor::Spawner;
@@ -19,6 +22,10 @@ use esp_hal::{
     peripherals::Peripherals,
 };
 use esp_println::println;
+use esp_wifi::{
+    init,
+    ble::controller::BleConnector,
+};
 use embedded_graphics::{
     mono_font::{ascii::*, MonoTextStyle},
     pixelcolor::BinaryColor,
@@ -36,6 +43,7 @@ use ssd1306::Ssd1306Async;
 // mod ble;
 // mod display;
 // mod spark_message;
+mod ble_scanner;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
@@ -48,12 +56,17 @@ async fn main(spawner: Spawner) {
 
     Timer::after(Duration::from_millis(100)).await;
 
-   //  let init = esp_wifi::init(
-   //      timer_group.timer0,
-   //      esp_hal::rng::Rng::new(peripherals.RNG),
-   //      peripherals.RADIO_CLK,
-   //  )
-   //  .unwrap();
+    let init = esp_wifi::init(
+        timg0.timer1,
+        esp_hal::rng::Rng::new(peripherals.RNG),
+        peripherals.RADIO_CLK,
+    )
+    .unwrap();
+
+    let bluetooth = peripherals.BT;
+    let connector = BleConnector::new(&init, bluetooth);
+
+    ble_scanner::run(connector).await;
 
     // Initialize SPI
     // +-------+------+------+---------+
