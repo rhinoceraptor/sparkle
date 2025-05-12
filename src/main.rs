@@ -41,6 +41,7 @@ use ssd1306::Ssd1306Async;
 
 
 mod ble;
+mod ble_connection;
 // mod display;
 // mod spark_message;
 
@@ -54,18 +55,6 @@ async fn main(spawner: Spawner) {
     esp_alloc::heap_allocator!(size: 72 * 1024);
 
     Timer::after(Duration::from_millis(100)).await;
-
-    let init = esp_wifi::init(
-        timg0.timer1,
-        esp_hal::rng::Rng::new(peripherals.RNG),
-        peripherals.RADIO_CLK,
-    )
-    .unwrap();
-
-    let bluetooth = peripherals.BT;
-    let connector = BleConnector::new(&init, bluetooth);
-
-    ble::scanner::run(connector).await;
 
     // Initialize SPI
     // +-------+------+------+---------+
@@ -120,6 +109,7 @@ async fn main(spawner: Spawner) {
     Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
     display.flush().await.unwrap();
 
+    spawner.spawn(ble_connection::run(timg0.timer1, peripherals.RNG, peripherals.RADIO_CLK, peripherals.BT)).unwrap();
 
     // spawner.spawn(display::controller::start(display)).unwrap();
     // spawner.spawn(ble::start(peripherals.BT, init)).unwrap();

@@ -1,4 +1,5 @@
 use esp_println::println;
+use bt_hci::param::{AddrKind, BdAddr};
 use bt_hci::cmd::le::LeSetScanParams;
 use bt_hci::controller::{Controller, ControllerCmdSync};
 use bt_hci::controller::ExternalController;
@@ -22,10 +23,12 @@ const CONNECTIONS_MAX: usize = 1;
 const L2CAP_CHANNELS_MAX: usize = 1;
 const SERVICE_UUID: u16 = 0xFFC0;
 
-pub async fn run(connector: BleConnector<'_>) -> Option<BdAddr> {
+pub async fn run(connector: BleConnector<'_>) -> Option<(AddrKind, BdAddr)> {
     // Using a fixed "random" address can be useful for testing. In real scenarios, one would
     // use e.g. the MAC 6 byte array as the address (how to get that varies by the platform).
     let address: Address = Address::random([0xff, 0x8f, 0x1b, 0x05, 0xe4, 0xff]);
+
+    println!("Our address = {:02X?}", address);
 
     let mut resources: HostResources<DefaultPacketPool, CONNECTIONS_MAX, L2CAP_CHANNELS_MAX> = HostResources::new();
     let controller: ExternalController<_, 20> = ExternalController::new(connector);
@@ -50,7 +53,7 @@ pub async fn run(connector: BleConnector<'_>) -> Option<BdAddr> {
             Timer::after(Duration::from_secs(1)).await;
         }
 
-        handler.get_addr().unwrap()
+        handler.get_device().unwrap()
     })
     .await;
 
@@ -61,7 +64,7 @@ pub async fn run(connector: BleConnector<'_>) -> Option<BdAddr> {
 }
 
 struct Handler {
-    device: RefCell<Option<BdAddr>>
+    device: RefCell<Option<(AddrKind, BdAddr)>>
 }
 
 impl Handler {
@@ -71,12 +74,12 @@ impl Handler {
         }
     }
 
-    fn get_addr(&self) -> Option<BdAddr> {
+    fn get_device(&self) -> Option<(AddrKind, BdAddr)> {
         self.device.borrow().clone()
     }
 
     fn found_device(&self) -> bool {
-        self.get_addr().is_some()
+        self.get_device().is_some()
     }
 }
 
@@ -87,7 +90,7 @@ impl EventHandler for Handler {
             if ad.is_advertising_service(SERVICE_UUID) {
                 println!("Found address {:?} advertising {:02X?}", report.addr, SERVICE_UUID);
                 let mut device = self.device.borrow_mut();
-                *device = Some(report.addr);
+                *device = Some((report.addr_kind, report.addr));
             }
         }
     }
