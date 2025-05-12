@@ -1,13 +1,10 @@
 use esp_println::println;
 use bt_hci::param::{AddrKind, BdAddr};
-use bt_hci::cmd::le::LeSetScanParams;
-use bt_hci::controller::{Controller, ControllerCmdSync};
 use bt_hci::controller::ExternalController;
 use core::cell::RefCell;
 use embassy_futures::select::select;
 use embassy_futures::select::Either::Second;
 use embassy_time::{Duration, Timer};
-use heapless::Deque;
 use esp_backtrace as _;
 use trouble_host::scan::{LeAdvReportsIter, Scanner};
 use trouble_host::connection::{PhySet, ScanConfig};

@@ -1,12 +1,10 @@
-use esp_println::println;
+use embassy_time::{Duration, Timer};
 use esp_hal::{
-    Async,
     spi::{Mode, master::{Config, Spi}},
-    gpio::{GpioPin, Level, Input, InputConfig, Output, OutputConfig, Pull},
-    clock::CpuClock,
+    gpio::{GpioPin, Level, Output, OutputConfig},
     time::Rate,
     timer::OneShotTimer,
-    peripherals::{SPI3, Peripherals},
+    peripherals::SPI3,
 };
 use esp_hal::timer::timg::Timer as EspTimer;
 use embedded_graphics::{
@@ -17,11 +15,12 @@ use embedded_graphics::{
     primitives::{PrimitiveStyle, Rectangle},
     Drawable,
 };
-use ssd1306::mode::BufferedGraphicsModeAsync;
 use ssd1306::size::DisplaySize128x64;
 use ssd1306::prelude::*;
 use ssd1306::Ssd1306Async;
-
+extern crate alloc;
+use alloc::string::String;
+use alloc::string::ToString;
 
 #[embassy_executor::task]
 pub async fn run(
@@ -58,6 +57,7 @@ pub async fn run(
     display.reset(&mut rst, &mut delay).await.unwrap();
 
     display.init().await.unwrap();
+
     let clear = Rectangle::new(
         Point::new(0, 0),
         display.bounding_box().size,
@@ -70,4 +70,25 @@ pub async fn run(
     clear.draw(&mut display).unwrap();
     Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
     display.flush().await.unwrap();
+
+    let mut counter: u8 = 0;
+
+    loop {
+        Timer::after(Duration::from_secs(1)).await;
+        let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
+
+        clear.draw(&mut display).unwrap();
+        Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
+        let mut display_text = String::from("\nHello world\n");
+        display_text.push_str(&counter.to_string());
+
+        Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
+        display.flush().await.unwrap();
+
+        if counter == 10 {
+            counter = 0;
+        } else {
+            counter += 1;
+        }
+    }
 }

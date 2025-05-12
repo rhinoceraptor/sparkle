@@ -1367,7 +1367,6 @@ dependencies = [
  "esp-hal-embassy",
  "esp-println",
  "esp-wifi",
- "heapless",
  "ssd1306",
  "static_cell",
  "trouble-host",

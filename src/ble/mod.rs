@@ -24,9 +24,10 @@ pub async fn run(
     let connector = BleConnector::new(&init, bt);
 
     let (addr_kind, addr) = scanner::run(connector).await.unwrap();
+    println!("addr_kind: {:?} addr: {:?}", addr_kind, addr);
 
     loop {
-        println!("addr_kind: {:?} addr: {:?}", addr_kind, addr);
-        Timer::after(Duration::from_secs(1)).await;
+        println!("BLE loop");
+        Timer::after(Duration::from_secs(10)).await;
     }
 }

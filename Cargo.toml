@@ -50,7 +50,6 @@ trouble-host = { version = "0.1.0", git = "https://github.com/embassy-rs/trouble
     # "security"
 ]}
 zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
-heapless = "0.8.0"
 
 [patch.crates-io]
 esp-wifi = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
