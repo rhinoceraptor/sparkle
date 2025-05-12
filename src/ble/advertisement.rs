@@ -1,5 +1,3 @@
-use esp_println::println;
-
 #[derive(Clone, Debug)]
 pub enum ServiceUuid {
     Uuid16(u16),
@@ -93,11 +91,11 @@ impl AdvertisementData {
                 break;
             }
 
-            let ad_type = u16::from_le_bytes(data[i + 1]);
+            let ad_type = data[i + 1];
             let payload = &data[i + 2..i + length + 1];
 
             match ad_type {
-                AdvertisementType::Flags => {
+                0x01 => {
                     if payload.len() == 1 {
                         ad_data.flags = Some(payload[0]);
                     }
@@ -155,18 +153,8 @@ impl AdvertisementData {
 
     pub fn is_advertising_service(&self, uuid: impl Into<ServiceUuid>) -> bool {
         match uuid.into() {
-            ServiceUuid::Uuid16(uuid_16) => {
-                println!("service_uuids_16 {:02X?}", self.service_uuids_16);
-                let contains = self.service_uuids_16.contains(&uuid_16);
-                println!("contains {}", contains);
-                contains
-            }
-            ServiceUuid::Uuid32(uuid_32) => {
-                println!("service_uuids_32 {:02X?}", self.service_uuids_32);
-                let contains = self.service_uuids_32.contains(&uuid_32);
-                println!("contains {}", contains);
-                contains
-            }
+            ServiceUuid::Uuid16(uuid_16)   =>  self.service_uuids_16.contains(&uuid_16),
+            ServiceUuid::Uuid32(uuid_32)   => self.service_uuids_32.contains(&uuid_32),
             ServiceUuid::Uuid128(uuid_128) => self.service_uuids_128.contains(&uuid_128),
         }
     }

@@ -3,7 +3,8 @@ use bt_hci::cmd::le::LeSetScanParams;
 use bt_hci::controller::{Controller, ControllerCmdSync};
 use bt_hci::controller::ExternalController;
 use core::cell::RefCell;
-use embassy_futures::join::join;
+use embassy_futures::select::select;
+use embassy_futures::select::Either::Second;
 use embassy_time::{Duration, Timer};
 use heapless::Deque;
 use esp_backtrace as _;
@@ -16,18 +17,15 @@ use esp_wifi::ble::controller::BleConnector;
 // use trouble_host::packet_pool::DefaultPacketPool;
 use super::advertisement::AdvertisementData;
 
-/// Max number of connections
+// Max number of connections
 const CONNECTIONS_MAX: usize = 1;
 const L2CAP_CHANNELS_MAX: usize = 1;
-const SERVICE_UUID: u32 = 0xFFC0;
-const SERVICE_UUID2: u32 = 0xC0FF;
+const SERVICE_UUID: u16 = 0xFFC0;
 
-pub async fn run(connector: BleConnector<'_>) {
+pub async fn run(connector: BleConnector<'_>) -> Option<BdAddr> {
     // Using a fixed "random" address can be useful for testing. In real scenarios, one would
     // use e.g. the MAC 6 byte array as the address (how to get that varies by the platform).
     let address: Address = Address::random([0xff, 0x8f, 0x1b, 0x05, 0xe4, 0xff]);
-
-    println!("Our address = {:02X?}", address);
 
     let mut resources: HostResources<DefaultPacketPool, CONNECTIONS_MAX, L2CAP_CHANNELS_MAX> = HostResources::new();
     let controller: ExternalController<_, 20> = ExternalController::new(connector);
@@ -37,53 +35,59 @@ pub async fn run(connector: BleConnector<'_>) {
         central, mut runner, ..
     } = stack.build();
 
-    let printer = Printer {
-        seen: RefCell::new(Deque::new()),
-    };
+    let handler = Handler::new();
+
     let mut scanner = Scanner::new(central);
-    let _ = join(runner.run_with_handler(&printer), async {
+    let addr = select(runner.run_with_handler(&handler), async {
         let mut config = ScanConfig::default();
         config.active = true;
         config.phys = PhySet::M1;
         config.interval = Duration::from_secs(1);
         config.window = Duration::from_secs(1);
         let mut _session = scanner.scan(&config).await.unwrap();
-        // Scan forever
-        loop {
+
+        while !handler.found_device() {
             Timer::after(Duration::from_secs(1)).await;
         }
+
+        handler.get_addr().unwrap()
     })
     .await;
+
+    match addr {
+        Second(a) => Some(a),
+        _ => None,
+    }
 }
 
-struct Printer {
-    seen: RefCell<Deque<BdAddr, 128>>,
+struct Handler {
+    device: RefCell<Option<BdAddr>>
 }
 
-impl EventHandler for Printer {
+impl Handler {
+    fn new() -> Self {
+        Self {
+            device: RefCell::new(None)
+        }
+    }
+
+    fn get_addr(&self) -> Option<BdAddr> {
+        self.device.borrow().clone()
+    }
+
+    fn found_device(&self) -> bool {
+        self.get_addr().is_some()
+    }
+}
+
+impl EventHandler for Handler {
     fn on_adv_reports(&self, mut it: LeAdvReportsIter<'_>) {
-        let mut seen = self.seen.borrow_mut();
         while let Some(Ok(report)) = it.next() {
-            if seen.iter().find(|b| b.raw() == report.addr.raw()).is_none() {
-                let one = BdAddr::new([0xBA, 0x79, 0x33, 0xED, 0xEB, 0xF7]);
-                let two = BdAddr::new([0xF7, 0xEB, 0xED, 0x33, 0x79, 0xBA]);
-                if report.addr == one || report.addr == two {
-                    println!("discovered: {:02X?}", report.addr);
-                    println!("data:\n{:02X?}", report.data);
-                    let ad = AdvertisementData::new_from_bytes(report.data);
-                    println!("{:02X?}", ad.service_uuids_32);
-
-                    println!("SERVICE_UUID {:02X?}", SERVICE_UUID);
-                    println!("SERVICE_UUID2 {:02X?}", SERVICE_UUID2);
-                    if ad.is_advertising_service(SERVICE_UUID) || ad.is_advertising_service(SERVICE_UUID2) {
-                        println!("ADVERTISING!!!!!!!!!!!");
-                    }
-                }
-
-                if seen.is_full() {
-                    seen.pop_front();
-                }
-                seen.push_back(report.addr).unwrap();
+            let ad = AdvertisementData::new_from_bytes(report.data);
+            if ad.is_advertising_service(SERVICE_UUID) {
+                println!("Found address {:?} advertising {:02X?}", report.addr, SERVICE_UUID);
+                let mut device = self.device.borrow_mut();
+                *device = Some(report.addr);
             }
         }
     }
