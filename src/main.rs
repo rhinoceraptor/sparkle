@@ -40,10 +40,9 @@ use ssd1306::prelude::*;
 use ssd1306::Ssd1306Async;
 
 
-// mod ble;
+mod ble;
 // mod display;
 // mod spark_message;
-mod ble_scanner;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
@@ -66,7 +65,7 @@ async fn main(spawner: Spawner) {
     let bluetooth = peripherals.BT;
     let connector = BleConnector::new(&init, bluetooth);
 
-    ble_scanner::run(connector).await;
+    ble::scanner::run(connector).await;
 
     // Initialize SPI
     // +-------+------+------+---------+

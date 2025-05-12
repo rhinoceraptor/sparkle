@@ -13,11 +13,14 @@ use trouble_host::{Host, HostResources};
 use trouble_host::prelude::*;
 use trouble_host::Address;
 use esp_wifi::ble::controller::BleConnector;
-mod parse_advertisement;
+// use trouble_host::packet_pool::DefaultPacketPool;
+use super::advertisement::AdvertisementData;
 
 /// Max number of connections
 const CONNECTIONS_MAX: usize = 1;
 const L2CAP_CHANNELS_MAX: usize = 1;
+const SERVICE_UUID: u32 = 0xFFC0;
+const SERVICE_UUID2: u32 = 0xC0FF;
 
 pub async fn run(connector: BleConnector<'_>) {
     // Using a fixed "random" address can be useful for testing. In real scenarios, one would
@@ -67,10 +70,13 @@ impl EventHandler for Printer {
                 if report.addr == one || report.addr == two {
                     println!("discovered: {:02X?}", report.addr);
                     println!("data:\n{:02X?}", report.data);
-                    let ad = parse_advertisement(report.data);
-                    println!("{:02X?}", ad.service_uuids_16);
-                    if ad.is_advertising_service(0xFFC0) {
-                        println!("\n\nADVERTISING!!!!!!!!\n\n");
+                    let ad = AdvertisementData::new_from_bytes(report.data);
+                    println!("{:02X?}", ad.service_uuids_32);
+
+                    println!("SERVICE_UUID {:02X?}", SERVICE_UUID);
+                    println!("SERVICE_UUID2 {:02X?}", SERVICE_UUID2);
+                    if ad.is_advertising_service(SERVICE_UUID) || ad.is_advertising_service(SERVICE_UUID2) {
+                        println!("ADVERTISING!!!!!!!!!!!");
                     }
                 }
 
