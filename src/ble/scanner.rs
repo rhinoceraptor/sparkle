@@ -15,7 +15,6 @@ use trouble_host::{Host, HostResources};
 use trouble_host::prelude::*;
 use trouble_host::Address;
 use esp_wifi::ble::controller::BleConnector;
-// use trouble_host::packet_pool::DefaultPacketPool;
 use super::advertisement::AdvertisementData;
 
 // Max number of connections

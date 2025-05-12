@@ -41,7 +41,6 @@ use ssd1306::Ssd1306Async;
 
 
 mod ble;
-mod ble_connection;
 // mod display;
 // mod spark_message;
 
@@ -109,7 +108,7 @@ async fn main(spawner: Spawner) {
     Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
     display.flush().await.unwrap();
 
-    spawner.spawn(ble_connection::run(timg0.timer1, peripherals.RNG, peripherals.RADIO_CLK, peripherals.BT)).unwrap();
+    spawner.spawn(ble::run(timg0.timer1, peripherals.RNG, peripherals.RADIO_CLK, peripherals.BT)).unwrap();
 
     // spawner.spawn(display::controller::start(display)).unwrap();
     // spawner.spawn(ble::start(peripherals.BT, init)).unwrap();
