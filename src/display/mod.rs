@@ -57,7 +57,6 @@ pub async fn run(
 
     let mut delay = OneShotTimer::new(timer).into_async();
     display.reset(&mut rst, &mut delay).await.unwrap();
-
     display.init().await.unwrap();
 
     let clear = Rectangle::new(
@@ -65,46 +64,23 @@ pub async fn run(
         display.bounding_box().size,
     )
     .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
-
-    // let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
-    // let display_text = "\nHello world";
-
-    clear.draw(&mut display).unwrap();
-    // Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
-    display.flush().await.unwrap();
-
-    // let mut counter: u8 = 0;
-
-    Image::new(&ImageRaw::<BinaryColor>::new(&font::H,     5), Point::new(16, 16)).draw(&mut display).unwrap();
-    Image::new(&ImageRaw::<BinaryColor>::new(&font::e,     5), Point::new(32, 16)).draw(&mut display).unwrap();
-    Image::new(&ImageRaw::<BinaryColor>::new(&font::l,     5), Point::new(48, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::l,     5), Point::new(29, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::o,     5), Point::new(34, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::space, 5), Point::new(39, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::W,     5), Point::new(44, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::o,     5), Point::new(49, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::r,     5), Point::new(54, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::l,     5), Point::new(59, 16)).draw(&mut display).unwrap();
-    // Image::new(&ImageRaw::<BinaryColor>::new(&font::d,     5), Point::new(64, 16)).draw(&mut display).unwrap();
-
-    display.flush().await.unwrap();
+    let mut counter = 0;
 
     loop {
+        let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
+
+        clear.draw(&mut display).unwrap();
+        let mut display_text = String::from("\nHello world\n");
+        display_text.push_str(&counter.to_string());
+        Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
+        display.flush().await.unwrap();
+
+        if counter == 10 {
+            counter = 0;
+        } else {
+            counter += 1;
+        }
+
         Timer::after(Duration::from_secs(1)).await;
-        // let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
-
-        // clear.draw(&mut display).unwrap();
-        // Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
-        // let mut display_text = String::from("\nHello world\n");
-        // display_text.push_str(&counter.to_string());
-
-        // Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
-        // display.flush().await.unwrap();
-
-        // if counter == 10 {
-        //     counter = 0;
-        // } else {
-        //     counter += 1;
-        // }
     }
 }
