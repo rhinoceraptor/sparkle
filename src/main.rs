@@ -1,8 +1,8 @@
 #![no_std]
 #![no_main]
-// #![allow(unused_imports)]
-// #![allow(unused_variables)]
-// #![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
 
 use embassy_time::{Duration, Timer};
 use embassy_executor::Spawner;
