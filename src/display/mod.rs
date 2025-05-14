@@ -6,6 +6,10 @@ use esp_hal::{
     timer::OneShotTimer,
     peripherals::SPI3,
 };
+use embassy_sync::mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::channel::Channel;
+use embassy_sync::channel::Receiver;
 use esp_println as _;
 use esp_hal::timer::timg::Timer as EspTimer;
 use embedded_graphics::{
@@ -34,6 +38,7 @@ pub async fn run(
     dc:    GpioPin<'static, 2>,
     timer: EspTimer<'static>,
     spi:   SPI3<'static>,
+    channel: Receiver<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,
 ) {
 
     let mut rst = Output::new(rst, Level::Low, OutputConfig::default());
@@ -65,23 +70,15 @@ pub async fn run(
         display.bounding_box().size,
     )
     .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off));
-    let mut counter = 0;
+    clear.draw(&mut display).unwrap();
+    display.flush().await.unwrap();
 
     loop {
+        let display_text = channel.receive().await.to_string();
         let text_style = MonoTextStyle::new(&FONT_9X15, BinaryColor::On);
-
         clear.draw(&mut display).unwrap();
-        let mut display_text = String::from("\nHello world\n");
-        display_text.push_str(&counter.to_string());
-        Text::new(&display_text, Point::zero(), text_style).draw(&mut display).unwrap();
+        Text::new(&display_text, Point::new(10, 32), text_style).draw(&mut display).unwrap();
         display.flush().await.unwrap();
 
-        if counter == 10 {
-            counter = 0;
-        } else {
-            counter += 1;
-        }
-
-        Timer::after(Duration::from_secs(1)).await;
     }
 }

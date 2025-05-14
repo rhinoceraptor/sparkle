@@ -52,6 +52,7 @@ trouble-host = { path = "../trouble/host", features = ["scan", "defmt"] }
 # ]}
 zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
 defmt-rtt = "1.0.0"
+arrayvec = { version = "0.7.6", default-features = false }
 
 [patch.crates-io]
 # trouble-host = {path = "../trouble/host"}

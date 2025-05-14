@@ -7,6 +7,9 @@
 use esp_println as _;
 use embassy_time::{Duration, Timer};
 use embassy_executor::Spawner;
+use embassy_sync::mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::channel::Channel;
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
@@ -15,6 +18,9 @@ use esp_hal::clock::CpuClock;
 mod ble;
 mod display;
 mod spark_message;
+
+pub type DisplayString = arrayvec::ArrayString<40>;
+static CHANNEL: Channel<CriticalSectionRawMutex, DisplayString, 40> = Channel::new();
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
@@ -30,7 +36,8 @@ async fn main(spawner: Spawner) {
         timg0.timer1,
         peripherals.RNG,
         peripherals.RADIO_CLK,
-        peripherals.BT
+        peripherals.BT,
+        CHANNEL.sender(),
     )).unwrap();
 
     // +-------+------+------+---------+
@@ -53,6 +60,7 @@ async fn main(spawner: Spawner) {
         peripherals.GPIO2,  // dc
         timg1.timer0,       // timer
         peripherals.SPI3,   // spi
+        CHANNEL.receiver(),
     )).unwrap();
 
     loop {

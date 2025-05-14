@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::string::String;
+use alloc::string::ToString;
 mod advertisement;
 mod scanner;
 
@@ -12,6 +15,10 @@ use core::cell::RefCell;
 use embassy_futures::select::select;
 use embassy_futures::join::{join3,join};
 use embassy_futures::select::Either::{First, Second};
+use embassy_sync::mutex::Mutex;
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::channel::Channel;
+use embassy_sync::channel::Sender;
 use esp_backtrace as _;
 use trouble_host::scan::{LeAdvReportsIter, Scanner};
 use trouble_host::connection::{PhySet, ScanConfig};
@@ -38,7 +45,8 @@ pub async fn run(
     timer: EspTimer<'static>,
     rng: RNG<'static>,
     clk: RADIO_CLK<'static>,
-    bt: BT<'static>
+    bt: BT<'static>,
+    channel: Sender<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,
 ) {
     let init = esp_wifi::init(
         timer,
@@ -127,6 +135,8 @@ pub async fn run(
     defmt::info!("Scanning for peripheral...");
     let _ = join(runner.run(), async {
         defmt::info!("Connecting");
+        let mut s = arrayvec::ArrayString::<40>::from("Connecting...").unwrap();
+        channel.send(s).await;
 
 
         let conn = central.connect(&config).await.unwrap();
@@ -135,29 +145,26 @@ pub async fn run(
             .await
             .unwrap();
 
-        Timer::after(Duration::from_secs(2)).await;
+        let mut s = arrayvec::ArrayString::<40>::from("Connected!").unwrap();
+        channel.send(s).await;
 
         let _ = join(client.task(), async {
             let services = client.services_by_uuid(&Uuid::new_short(SPARK_SERVICE_UUID)).await.unwrap();
             let service = services.first().unwrap().clone();
 
-            Timer::after(Duration::from_secs(1)).await;
             let read_characteristic: Characteristic<u8> = client
                 .characteristic_by_uuid(&service, &Uuid::from(NOTIF_CHARACTERISTIC))
                 .await
                 .unwrap();
 
 
-            Timer::after(Duration::from_secs(1)).await;
             let res = client.write_characteristic(&read_characteristic, &MYSTERY_VALUES).await;
 
-            Timer::after(Duration::from_secs(1)).await;
             let write_characteristic: Characteristic<u8> = client
                 .characteristic_by_uuid(&service, &Uuid::new_short(WRITE_CHARACTERISTIC))
                 .await
                 .unwrap();
 
-            Timer::after(Duration::from_secs(1)).await;
 
             let mut listener = client.subscribe(&read_characteristic, false).await.unwrap();
 
@@ -170,38 +177,69 @@ pub async fn run(
                         let msg = decoder.decode(&data.as_ref());
                         match msg {
                             Some(spark_message::SparkToAppMsg::AmpName { sequence, name }) => {
-                                defmt::info!("Connected to '{}', sequence: {}", name.as_str(), sequence);
+                                defmt::info!("Connected to {}, seq: {}", name.as_str(), sequence);
+                                let s = arrayvec::ArrayString::<40>::from(&name).unwrap();
+                                channel.send(s).await;
                             },
                             _ => {}
                         }
                     }
                 },
                 async {
+                    let mut encoder = spark_message::SparkMsgEncoder::new();
+                    let msg = spark_message::AppToSparkMsg::GetAmpName{};
+                    let mut blocks = encoder.encode(msg);
+
+                    for block in &mut blocks {
+                        defmt::info!("write characteristic\n{:X}", block[..]);
+                        client.write_characteristic(&write_characteristic, &block).await.unwrap();
+                    }
+                },
+                async {
+                    Timer::after(Duration::from_secs(4)).await;
                     loop {
                         let mut encoder = spark_message::SparkMsgEncoder::new();
-                        let msg = spark_message::AppToSparkMsg::GetAmpName{};
+                        let msg = spark_message::AppToSparkMsg::SetHardwarePreset(1);
                         let mut blocks = encoder.encode(msg);
 
+                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 1").unwrap();
+                        channel.send(s).await;
                         for block in &mut blocks {
                             defmt::info!("write characteristic\n{:X}", block[..]);
                             client.write_characteristic(&write_characteristic, &block).await.unwrap();
                         }
-                        Timer::after(Duration::from_secs(10)).await;
-                    }
-                },
-                async {
-                    loop {
-                        for i in 1..=4 {
-                            let mut encoder = spark_message::SparkMsgEncoder::new();
-                            let msg = spark_message::AppToSparkMsg::SetHardwarePreset(i);
-                            let mut blocks = encoder.encode(msg);
+                        Timer::after(Duration::from_secs(2)).await;
 
-                            for block in &mut blocks {
-                                defmt::info!("write characteristic\n{:X}", block[..]);
-                                client.write_characteristic(&write_characteristic, &block).await.unwrap();
-                            }
-                            Timer::after(Duration::from_secs(2)).await;
+                        let msg = spark_message::AppToSparkMsg::SetHardwarePreset(2);
+                        let mut blocks = encoder.encode(msg);
+
+                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 2").unwrap();
+                        channel.send(s).await;
+                        for block in &mut blocks {
+                            defmt::info!("write characteristic\n{:X}", block[..]);
+                            client.write_characteristic(&write_characteristic, &block).await.unwrap();
                         }
+                        Timer::after(Duration::from_secs(2)).await;
+                        let msg = spark_message::AppToSparkMsg::SetHardwarePreset(3);
+                        let mut blocks = encoder.encode(msg);
+
+                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 3").unwrap();
+                        channel.send(s).await;
+                        for block in &mut blocks {
+                            defmt::info!("write characteristic\n{:X}", block[..]);
+                            client.write_characteristic(&write_characteristic, &block).await.unwrap();
+                        }
+                        Timer::after(Duration::from_secs(2)).await;
+                        let msg = spark_message::AppToSparkMsg::SetHardwarePreset(4);
+                        let mut blocks = encoder.encode(msg);
+
+                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 4").unwrap();
+                        channel.send(s).await;
+                        for block in &mut blocks {
+                            defmt::info!("write characteristic\n{:X}", block[..]);
+                            client.write_characteristic(&write_characteristic, &block).await.unwrap();
+                        }
+                        Timer::after(Duration::from_secs(2)).await;
                     }
                 },
             )
