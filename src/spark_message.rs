@@ -44,22 +44,28 @@ pub struct ChunkHeader {
 #[derive(Clone, Copy)]
 pub enum AppToSparkMsg {
     GetAmpName,
+    SetHardwarePreset(u8),
 }
 
 impl AppToSparkMsg {
     fn opcode(&self) -> (u8, u8) {
         match self {
             AppToSparkMsg::GetAmpName => (0x02, 0x11),
+            AppToSparkMsg::SetHardwarePreset(_) => (0x01, 0x38),
         }
     }
 
     fn encode_payload(&self) -> Vec<u8> {
-        let mut buf = Vec::new();
+        let mut buf: Vec<u8> = Vec::new();
 
         match self {
             AppToSparkMsg::GetAmpName => {
                 // no payload
-            }
+            },
+            AppToSparkMsg::SetHardwarePreset(preset) => {
+                buf.push(0x00);
+                buf.push(preset - 1);
+            },
         }
 
         buf

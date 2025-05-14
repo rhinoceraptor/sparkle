@@ -10,7 +10,7 @@ use bt_hci::controller::ExternalController;
 use bt_hci::uuid::descriptors::CLIENT_CHARACTERISTIC_CONFIGURATION;
 use core::cell::RefCell;
 use embassy_futures::select::select;
-use embassy_futures::join::join;
+use embassy_futures::join::{join3,join};
 use embassy_futures::select::Either::{First, Second};
 use esp_backtrace as _;
 use trouble_host::scan::{LeAdvReportsIter, Scanner};
@@ -161,7 +161,7 @@ pub async fn run(
 
             let mut listener = client.subscribe(&read_characteristic, false).await.unwrap();
 
-            let _ = join(
+            let _ = join3(
                 async {
                     loop {
                         let data = listener.next().await;
@@ -187,6 +187,21 @@ pub async fn run(
                             client.write_characteristic(&write_characteristic, &block).await.unwrap();
                         }
                         Timer::after(Duration::from_secs(10)).await;
+                    }
+                },
+                async {
+                    loop {
+                        for i in 1..=4 {
+                            let mut encoder = spark_message::SparkMsgEncoder::new();
+                            let msg = spark_message::AppToSparkMsg::SetHardwarePreset(i);
+                            let mut blocks = encoder.encode(msg);
+
+                            for block in &mut blocks {
+                                defmt::info!("write characteristic\n{:X}", block[..]);
+                                client.write_characteristic(&write_characteristic, &block).await.unwrap();
+                            }
+                            Timer::after(Duration::from_secs(2)).await;
+                        }
                     }
                 },
             )
