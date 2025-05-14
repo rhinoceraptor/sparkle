@@ -1,3 +1,4 @@
+use esp_println as _;
 use tinybmp::Bmp;
 use embedded_graphics::{
     image::ImageRaw,

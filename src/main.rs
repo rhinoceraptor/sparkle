@@ -4,19 +4,21 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
+use esp_println as _;
 use embassy_time::{Duration, Timer};
 use embassy_executor::Spawner;
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
-use esp_println::println;
+// use defmt;
 
 mod ble;
 mod display;
-// mod spark_message;
+mod spark_message;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
+    defmt::info!("Hello world");
     let peripherals = esp_hal::init(esp_hal::Config::default().with_cpu_clock(CpuClock::max()));
     let timg0 = esp_hal::timer::timg::TimerGroup::new(peripherals.TIMG0);
     let timg1 = esp_hal::timer::timg::TimerGroup::new(peripherals.TIMG1);
@@ -54,7 +56,7 @@ async fn main(spawner: Spawner) {
     )).unwrap();
 
     loop {
-        println!("Main loop");
+        defmt::info!("Main loop");
         Timer::after(Duration::from_secs(10)).await;
     }
 }

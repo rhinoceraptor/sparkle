@@ -6,6 +6,7 @@ use esp_hal::{
     timer::OneShotTimer,
     peripherals::SPI3,
 };
+use esp_println as _;
 use esp_hal::timer::timg::Timer as EspTimer;
 use embedded_graphics::{
     image::{Image, ImageRaw},

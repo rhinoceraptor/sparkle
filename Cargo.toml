@@ -24,7 +24,7 @@ panic = "abort"
 
 [dependencies]
 
-bt-hci = { version = "0.3.1" }
+bt-hci = { version = "0.3.1", features = ["defmt"] }
 display-interface = "0.5.0"
 display-interface-spi = "0.5.0"
 defmt = "1.0.1"
@@ -38,20 +38,23 @@ embedded-hal-bus = { version = "0.3.0", features = ["async"] }
 embedded-hal = { version = "1.0.0" }
 esp-alloc = { version = "0.7.0" }
 esp-backtrace = { version = "0.15.1", features = ["esp32", "defmt", "panic-handler"] }
-esp-println = { version = "0.13.1", features = ["esp32", "defmt-espflash"] }
+esp-println = { version = "^0.13.0", features = ["esp32", "defmt-espflash"] }
 esp-hal = { version = "1.0.0-beta.0", features = ["esp32", "defmt", "unstable", "__esp_hal_embassy"] }
 esp-hal-embassy = { version = "0.7.0", features = ["esp32"] }
 esp-wifi = { version = "0.13.0", features = ["esp32", "ble"] }
 ssd1306 = { version = "0.10.0", features = ["async"] }
 static_cell = { version = "2.1.0" }
-trouble-host = { version = "0.1.0", git = "https://github.com/embassy-rs/trouble", rev = "644a418bed867d93e685442041ad6bc8b8f31681", features = [
-    "scan",
-    # TODO: This breaks the build for some reason
-    # "security"
-]}
+trouble-host = { path = "../trouble/host", features = ["scan", "defmt"] }
+# trouble-host = { version = "0.1.0", git = "https://github.com/embassy-rs/trouble", rev = "644a418bed867d93e685442041ad6bc8b8f31681", features = [
+#     "scan",
+#     # TODO: This breaks the build for some reason
+#     # "security"
+# ]}
 zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
+defmt-rtt = "1.0.0"
 
 [patch.crates-io]
+# trouble-host = {path = "../trouble/host"}
 esp-wifi = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
 esp-backtrace = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
 esp-hal = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
