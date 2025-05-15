@@ -48,6 +48,8 @@ pub async fn run(
     bt: BT<'static>,
     channel: Sender<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,
 ) {
+    let mut s = arrayvec::ArrayString::<40>::from("Initializing...").unwrap();
+    channel.send(s).await;
     let init = esp_wifi::init(
         timer,
         esp_hal::rng::Rng::new(rng),
@@ -63,67 +65,52 @@ pub async fn run(
     let controller: ExternalController<_, 20> = ExternalController::new(connector);
     let stack = trouble_host::new(controller, &mut resources).set_random_address(address);
 
-    // let Host {
-    //     central, mut runner, ..
-    // } = stack.build();
+    let Host {
+        central, mut runner, ..
+    } = stack.build();
 
 
-    // // defmt::info!("Our address = {:02X?}", address);
+    // defmt::info!("Our address = {:02X?}", address);
 
-    // let handler = scanner::ScanHandler::new();
+    let handler = scanner::ScanHandler::new();
+    let mut s = arrayvec::ArrayString::<40>::from("Scanning...").unwrap();
+    channel.send(s).await;
 
-    // let mut scanner = Scanner::new(central);
-    // let addr = select(runner.run_with_handler(&handler), async {
-    //     let mut config = ScanConfig::default();
-    //     config.active = true;
-    //     config.phys = PhySet::M1;
-    //     config.interval = Duration::from_secs(1);
-    //     config.window = Duration::from_secs(1);
-    //     let mut _session = scanner.scan(&config).await.unwrap();
+    let mut scanner = Scanner::new(central);
+    let addr = select(runner.run_with_handler(&handler), async {
+        while !handler.found_device() {
+            let mut config = ScanConfig::default();
+            config.active = true;
+            config.phys = PhySet::M1;
+            config.interval = Duration::from_secs(1);
+            config.window = Duration::from_secs(1);
+            let mut _session = scanner.scan(&config).await.unwrap();
+        }
 
-    //     while !handler.found_device() {
-    //         Timer::after(Duration::from_secs(1)).await;
-    //     }
-
-    //     handler.get_device().unwrap()
-    // })
-    // .await;
-
-
-    // let (addr_kind, addr) = match addr {
-    //     First(a) => todo!(),
-    //     Second(a) => Some(a).unwrap(),
-    // };
-    // defmt::info!("addr_kind: {:?} addr: {:?}", addr_kind, addr);
+        handler.get_device().unwrap()
+    })
+    .await;
 
 
-    // let params = ConnectParams {
-    //     min_connection_interface: 120,
-    //     max_connection_interval: 120,
-    //     max_latency: 0,
-    //     timeout: 60
-    // };
+    let (addr_kind, addr) = match addr {
+        First(a) => todo!(),
+        Second(a) => Some(a).unwrap(),
+    };
 
-    let addr_kind = AddrKind::RANDOM;
-    let addr = BdAddr::new([0xBA, 0x79, 0x33, 0xED, 0xEB, 0xF7]);
-
-    defmt::info!("Got addr, {}, {}", addr_kind, addr);
+    let mut s = arrayvec::ArrayString::<40>::from("Found amp").unwrap();
+    channel.send(s).await;
+    defmt::info!("addr_kind: {:?} addr: {:?}", addr_kind, addr);
 
     let config = ConnectConfig {
         connect_params: ConnectParams {
-            min_connection_interval: Duration::from_millis(40),
-            max_connection_interval: Duration::from_millis(40),
-            max_latency: 5,
-            event_length: Duration::from_millis(0),
+            min_connection_interval: Duration::from_micros(7500),
+            max_connection_interval: Duration::from_micros(7500),
+            max_latency: 500,
             supervision_timeout: Duration::from_secs(10),
+            ..Default::default()
         },
         scan_config: ScanConfig {
-            // active: true,
             filter_accept_list: &[(addr_kind, &addr)],
-            // phys: PhySet:M1,
-            // interval: Duration::from_secs(2),
-            // window: Duration::from_secs(2),
-            // timeout: Duration::from_secs(2),
             ..Default::default()
         },
     };
@@ -133,15 +120,35 @@ pub async fn run(
     } = stack.build();
 
     defmt::info!("Scanning for peripheral...");
+    Timer::after(Duration::from_secs(5)).await;
+
+    let mut s = arrayvec::ArrayString::<40>::from("Connecting...").unwrap();
+    channel.send(s).await;
+
     let _ = join(runner.run(), async {
         defmt::info!("Connecting");
-        let mut s = arrayvec::ArrayString::<40>::from("Connecting...").unwrap();
-        channel.send(s).await;
 
+        let mut conn = None;
+        let mut connected = false;
+        while !connected {
+            defmt::info!("Try connect");
+            let resp = central.connect(&config).await;
+            match resp {
+                Ok(c) => {
+                    defmt::info!("Connected!");
+                    connected = true;
+                    conn = Some(c);
+                },
+                Err(a) => {
+                    defmt::info!("Retry");
+                    Timer::after(Duration::from_secs(1)).await;
+                },
+            }
+        }
 
-        let conn = central.connect(&config).await.unwrap();
+        let conn_ref = conn.as_ref().expect("Connection not established");
 
-        let client = GattClient::<_, DefaultPacketPool, 10>::new(&stack, &conn)
+        let client = GattClient::<_, DefaultPacketPool, 10>::new(&stack, &conn_ref)
             .await
             .unwrap();
 
