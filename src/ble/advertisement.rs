@@ -155,7 +155,7 @@ impl AdvertisementData {
 
     pub fn is_advertising_service(&self, uuid: impl Into<ServiceUuid>) -> bool {
         match uuid.into() {
-            ServiceUuid::Uuid16(uuid_16)   =>  self.service_uuids_16.contains(&uuid_16),
+            ServiceUuid::Uuid16(uuid_16)   => self.service_uuids_16.contains(&uuid_16),
             ServiceUuid::Uuid32(uuid_32)   => self.service_uuids_32.contains(&uuid_32),
             ServiceUuid::Uuid128(uuid_128) => self.service_uuids_128.contains(&uuid_128),
         }

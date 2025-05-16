@@ -58,7 +58,7 @@ checksum = "331afbb18ce7b644c0b428726d369c5dd37ca0b815d72a459fcc2896c3c8ad32"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -88,12 +88,6 @@ dependencies = [
  "heapless",
  "uuid",
 ]
-
-[[package]]
-name = "byte-slice-cast"
-version = "1.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7575182f7272186991736b70173b0ea045398f984bf5ebbb3804736ce1330c9d"
 
 [[package]]
 name = "bytemuck"
@@ -149,7 +143,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "strsim",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -160,7 +154,7 @@ checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
 dependencies = [
  "darling_core",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -192,7 +186,7 @@ dependencies = [
  "proc-macro-error2",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -222,36 +216,7 @@ checksum = "b9b6483c2bbed26f97861cf57651d4f2b731964a28cd2257f934a4b452480d21"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "display-interface"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba2aab1ef3793e6f7804162debb5ac5edb93b3d650fbcc5aeb72fcd0e6c03a0"
-
-[[package]]
-name = "display-interface-i2c"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d964fa85bbbb5a6ecd06e58699407ac5dc3e3ad72dac0ab7e6b0d00a1cd262d"
-dependencies = [
- "display-interface",
- "embedded-hal 1.0.0",
- "embedded-hal-async",
-]
-
-[[package]]
-name = "display-interface-spi"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f86b9ec30048b1955da2038fcc3c017f419ab21bb0001879d16c0a3749dc6b7a"
-dependencies = [
- "byte-slice-cast",
- "display-interface",
- "embedded-hal 1.0.0",
- "embedded-hal-async",
+ "syn",
 ]
 
 [[package]]
@@ -301,7 +266,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -481,7 +446,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -502,7 +467,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -544,7 +509,7 @@ version = "0.2.0"
 source = "git+https://github.com/esp-rs/esp-hal.git?rev=56be259c41305f24276852d2af4fce16247107bd#56be259c41305f24276852d2af4fce16247107bd"
 dependencies = [
  "quote",
- "syn 2.0.101",
+ "syn",
  "termcolor",
 ]
 
@@ -642,7 +607,7 @@ dependencies = [
  "proc-macro-error2",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -956,7 +921,7 @@ dependencies = [
  "indoc",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -997,19 +962,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
-name = "maybe-async-cfg"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1e083394889336bc66a4eaf1011ffbfa74893e910f902a9f271fa624c61e1b2"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "pulldown-cmark",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1028,6 +980,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd72e8b4e42274540edabec853f607c015c73436159b06c39c7af85a20433155"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "mipidsi"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ba34dcbf61182ffa6992b5a4d9b566d5a99df127fd93f6d314213347329e92f"
+dependencies = [
+ "embedded-graphics-core",
+ "embedded-hal 1.0.0",
+ "heapless",
+ "nb 1.1.0",
 ]
 
 [[package]]
@@ -1053,7 +1017,7 @@ checksum = "ed3955f1a9c7c0c15e092f9c887db08b1fc683305fdf6eb6684f22555355e202"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1107,7 +1071,7 @@ checksum = "a33fa6ec7f2047f572d49317cca19c87195de99c6e5b6ee492da701cfe02b053"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1117,30 +1081,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edce586971a4dfaa28950c6f18ed55e0406c1ab88bbce2c6f6293a7aaba73d35"
 dependencies = [
  "toml_edit",
-]
-
-[[package]]
-name = "proc-macro-error"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
-dependencies = [
- "proc-macro-error-attr",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "version_check",
-]
-
-[[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
-dependencies = [
- "proc-macro2",
- "quote",
- "version_check",
 ]
 
 [[package]]
@@ -1162,7 +1102,7 @@ dependencies = [
  "proc-macro-error-attr2",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1175,14 +1115,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "pulldown-cmark"
-version = "0.11.3"
+name = "profont"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "679341d22c78c6c649893cbd6c3278dcbe9fc4faa62fea3a9296ae2b50c14625"
+checksum = "016681370a9dd6e7ddb4c1a959922fd59dc45e5ebaa5ff5b13090267898ced34"
 dependencies = [
- "bitflags 2.9.0",
- "memchr",
- "unicase",
+ "embedded-graphics",
 ]
 
 [[package]]
@@ -1233,7 +1171,7 @@ checksum = "f265be5d634272320a7de94cea15c22a3bfdd4eb42eb43edc528415f066a1f25"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1250,7 +1188,7 @@ checksum = "fc71814687c45ba4cd1e47a54e03a2dbc62ca3667098fbae9cc6b423956758fa"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1294,7 +1232,7 @@ checksum = "5b0276cf7f2c73365f7157c8123c21cd9a50fbbd844757af28ca1f5925fc2a00"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1326,8 +1264,6 @@ dependencies = [
  "bt-hci",
  "defmt 1.0.1",
  "defmt-rtt",
- "display-interface",
- "display-interface-spi",
  "embassy-embedded-hal",
  "embassy-executor",
  "embassy-futures",
@@ -1342,25 +1278,11 @@ dependencies = [
  "esp-hal-embassy",
  "esp-println",
  "esp-wifi",
- "ssd1306",
+ "mipidsi",
+ "profont",
  "static_cell",
  "trouble-host",
  "zerocopy",
-]
-
-[[package]]
-name = "ssd1306"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ea6aac2d078bbc71d9b8ac3f657335311f3b6625e9a1a96ccc29f5abfa77c56"
-dependencies = [
- "display-interface",
- "display-interface-i2c",
- "display-interface-spi",
- "embedded-graphics-core",
- "embedded-hal 1.0.0",
- "embedded-hal-async",
- "maybe-async-cfg",
 ]
 
 [[package]]
@@ -1412,7 +1334,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1425,18 +1347,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "syn"
-version = "1.0.109"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-ident",
+ "syn",
 ]
 
 [[package]]
@@ -1476,7 +1387,7 @@ checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1546,7 +1457,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
  "uuid",
 ]
 
@@ -1555,12 +1466,6 @@ name = "ufmt-write"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e87a2ed6b42ec5e28cc3b94c09982969e9227600b2e3dcbc1db927a84c06bd69"
-
-[[package]]
-name = "unicase"
-version = "2.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b844d17643ee918803943289730bec8aac480150456169e647ed0b576ba539"
 
 [[package]]
 name = "unicode-ident"
@@ -1585,12 +1490,6 @@ name = "vcell"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77439c1b53d2303b20d9459b1ade71a83c716e3f9c34f3228c00e6f185d6c002"
-
-[[package]]
-name = "version_check"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "void"
@@ -1723,7 +1622,7 @@ dependencies = [
  "darling",
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]
 
 [[package]]
@@ -1743,5 +1642,5 @@ checksum = "28a6e20d751156648aa063f3800b706ee209a32c0b4d9f24be3d980b01be55ef"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.101",
+ "syn",
 ]

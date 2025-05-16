@@ -13,7 +13,7 @@ use embassy_sync::channel::Channel;
 use esp_alloc as _;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
-// use defmt;
+use defmt;
 
 mod ble;
 mod display;
@@ -58,6 +58,8 @@ async fn main(spawner: Spawner) {
         peripherals.GPIO4,  // rst
         peripherals.GPIO5,  // cs
         peripherals.GPIO2,  // dc
+        peripherals.GPIO15, // Backlight
+        peripherals.GPIO21, // miso
         timg1.timer0,       // timer
         peripherals.SPI3,   // spi
         CHANNEL.receiver(),
