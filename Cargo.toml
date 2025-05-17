@@ -26,11 +26,13 @@ panic = "abort"
 
 bt-hci = { version = "0.3.1", features = ["defmt"] }
 defmt = "1.0.1"
-embassy-embedded-hal = { version = "0.3.0", default-features = false }
-embassy-executor = { version = "0.7.0", features = ["defmt", "task-arena-size-16384"] }
-embassy-futures = { version = "0.1.1" }
-embassy-sync = { version = "0.6.2" }
-embassy-time = { version = "0.4.0", features = ["generic-queue-64"] }
+embassy-embedded-hal = { default-features = false, git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-executor = { features = ["defmt"], git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-time = { features = ["generic-queue-64"], git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-time-driver = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+
 embedded-graphics = { version = "0.8.1", features = ["defmt"] }
 embedded-hal-bus = { version = "0.3.0", features = ["async"] }
 embedded-hal = { version = "1.0.0" }
@@ -38,15 +40,26 @@ esp-alloc = { version = "0.7.0" }
 esp-backtrace = { version = "0.15.1", features = ["esp32", "defmt", "panic-handler"] }
 esp-println = { version = "^0.13.0", features = ["esp32", "defmt-espflash"] }
 esp-hal = { version = "1.0.0-beta.0", features = ["esp32", "defmt", "unstable", "__esp_hal_embassy"] }
-esp-hal-embassy = { version = "0.7.0", features = ["esp32"] }
+esp-hal-embassy = { version = "0.7", features = ["esp32"] }
 esp-wifi = { version = "0.13.0", features = ["esp32", "ble"] }
 static_cell = { version = "2.1.0" }
-trouble-host = { path = "../trouble/host", features = ["scan", "defmt"] }
-# trouble-host = { version = "0.1.0", git = "https://github.com/embassy-rs/trouble", rev = "644a418bed867d93e685442041ad6bc8b8f31681", features = [
-#     "scan",
-#     # TODO: This breaks the build for some reason
-#     # "security"
-# ]}
+trouble-host = { version = "0.1.0", git = "https://github.com/embassy-rs/trouble", rev = "7d72e8d", features = [
+#    peripheral = []
+#    controller-host-flow-control = []
+#    connection-metrics = []
+#    channel-metrics = []
+#    dev-disable-csprng-seed-requirement = []
+#    default-packet-pool = []
+#    l2cap-sdu-reassembly-optimization = []
+    "default-packet-pool-mtu-255",
+    # "connection-metrics",
+    # "channel-metrics",
+    # "controller-host-flow-control",
+    # "defmt",
+    # "gatt",
+    "scan",
+    # "derive",
+]}
 zerocopy = { version = "0.8.25", features = ["derive", "zerocopy-derive"] }
 defmt-rtt = "1.0.0"
 arrayvec = { version = "0.7.6", default-features = false }
@@ -54,12 +67,20 @@ mipidsi = "0.9.0"
 profont = "0.7.0"
 
 [patch.crates-io]
-esp-wifi = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
-esp-backtrace = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
-esp-hal = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
-esp-hal-embassy = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
-esp-alloc = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
-esp-println = {git = "https://github.com/esp-rs/esp-hal.git", rev = "56be259c41305f24276852d2af4fce16247107bd"}
+esp-wifi = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+esp-backtrace = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+esp-hal = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+esp-hal-embassy = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+esp-alloc = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+esp-println = { git = "https://github.com/esp-rs/esp-hal.git", rev = "7b7844a85516d0a5c00df6b0e5f5a251abf323bb" }
+
+embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-time-driver = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
+embassy-time-queue-utils = { git = "https://github.com/embassy-rs/embassy", rev = "e8b1ea14c7fb151aa5e296ca8f9724f175bdeaef" }
 
 [profile.dev.package.esp-wifi]
 opt-level = 3

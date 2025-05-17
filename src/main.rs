@@ -53,13 +53,13 @@ async fn main(spawner: Spawner) {
     // +-------+------+------+---------+
 
     spawner.spawn(display::run(
-        peripherals.GPIO18, // sclk
-        peripherals.GPIO19, // mosi
-        peripherals.GPIO4,  // rst
-        peripherals.GPIO5,  // cs
-        peripherals.GPIO2,  // dc
-        peripherals.GPIO15, // Backlight
-        peripherals.GPIO21, // miso
+        peripherals.GPIO18.into(), // sclk
+        peripherals.GPIO19.into(), // mosi
+        peripherals.GPIO4.into(),  // rst
+        peripherals.GPIO5.into(),  // cs
+        peripherals.GPIO2.into(),  // dc
+        peripherals.GPIO15.into(), // Backlight
+        peripherals.GPIO21.into(), // miso
         timg1.timer0,       // timer
         peripherals.SPI3,   // spi
         CHANNEL.receiver(),

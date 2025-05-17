@@ -1,7 +1,7 @@
 use embassy_time::{Duration, Timer};
 use esp_hal::{
     spi::{Mode, master::{Config, Spi}},
-    gpio::{GpioPin, Level, Output, OutputConfig},
+    gpio::{AnyPin, Level, Output, OutputConfig},
     time::Rate,
     timer::OneShotTimer,
     peripherals::SPI3,
@@ -42,13 +42,13 @@ const W: i32 = 320;
 
 #[embassy_executor::task]
 pub async fn run(
-    sclk:      GpioPin<'static, 18>,
-    mosi:      GpioPin<'static, 19>,
-    rst:       GpioPin<'static, 4>,
-    cs:        GpioPin<'static, 5>,
-    dc:        GpioPin<'static, 2>,
-    backlight: GpioPin<'static, 15>,
-    miso:      GpioPin<'static, 21>,
+    sclk:      AnyPin<'static>,
+    mosi:      AnyPin<'static>,
+    rst:       AnyPin<'static>,
+    cs:        AnyPin<'static>,
+    dc:        AnyPin<'static>,
+    backlight: AnyPin<'static>,
+    miso:      AnyPin<'static>,
     timer:     EspTimer<'static>,
     spi:       SPI3<'static>,
     channel: Receiver<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,

@@ -69,9 +69,6 @@ pub async fn run(
         central, mut runner, ..
     } = stack.build();
 
-
-    // defmt::info!("Our address = {:02X?}", address);
-
     let handler = scanner::ScanHandler::new();
     let s = arrayvec::ArrayString::<40>::from("Scanning...").unwrap();
     channel.send(s).await;
@@ -115,6 +112,8 @@ pub async fn run(
         },
     };
 
+    Timer::after(Duration::from_secs(10)).await;
+
     let Host {
         mut central, mut runner, ..
     } = stack.build();
@@ -133,6 +132,7 @@ pub async fn run(
         while !connected {
             defmt::info!("Try connect");
             let resp = central.connect(&config).await;
+            defmt::info!("after");
             match resp {
                 Ok(c) => {
                     defmt::info!("Connected!");
