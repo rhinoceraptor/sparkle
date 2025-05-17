@@ -54,7 +54,7 @@ pub async fn run(
     channel: Receiver<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,
 ) {
 
-    let mut rst       = Output::new(rst,       Level::Low, OutputConfig::default());
+    let     rst       = Output::new(rst,       Level::Low, OutputConfig::default());
     let cs            = Output::new(cs,        Level::Low, OutputConfig::default());
     let dc            = Output::new(dc,        Level::Low, OutputConfig::default());
     let mut backlight = Output::new(backlight, Level::Low, OutputConfig::default());
@@ -81,8 +81,8 @@ pub async fn run(
 
     let text_style = MonoTextStyle::new(&PROFONT_24_POINT, Rgb565::WHITE);
     let text = "Hello World ^_^;";
-    let mut text_x: i32 = 100;
-    let mut text_y: i32 = 100;
+    let text_x: i32 = 100;
+    let text_y: i32 = 100;
 
     backlight.set_level(Level::High);
 

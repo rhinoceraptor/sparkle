@@ -48,7 +48,7 @@ pub async fn run(
     bt: BT<'static>,
     channel: Sender<'static, CriticalSectionRawMutex, arrayvec::ArrayString<40>, 40>,
 ) {
-    let mut s = arrayvec::ArrayString::<40>::from("Initializing...").unwrap();
+    let s = arrayvec::ArrayString::<40>::from("Initializing...").unwrap();
     channel.send(s).await;
     let init = esp_wifi::init(
         timer,
@@ -73,7 +73,7 @@ pub async fn run(
     // defmt::info!("Our address = {:02X?}", address);
 
     let handler = scanner::ScanHandler::new();
-    let mut s = arrayvec::ArrayString::<40>::from("Scanning...").unwrap();
+    let s = arrayvec::ArrayString::<40>::from("Scanning...").unwrap();
     channel.send(s).await;
 
     let mut scanner = Scanner::new(central);
@@ -97,7 +97,7 @@ pub async fn run(
         Second(a) => Some(a).unwrap(),
     };
 
-    let mut s = arrayvec::ArrayString::<40>::from("Found amp").unwrap();
+    let s = arrayvec::ArrayString::<40>::from("Found amp").unwrap();
     channel.send(s).await;
     defmt::info!("addr_kind: {:?} addr: {:?}", addr_kind, addr);
 
@@ -122,7 +122,7 @@ pub async fn run(
     defmt::info!("Scanning for peripheral...");
     Timer::after(Duration::from_secs(5)).await;
 
-    let mut s = arrayvec::ArrayString::<40>::from("Connecting...").unwrap();
+    let s = arrayvec::ArrayString::<40>::from("Connecting...").unwrap();
     channel.send(s).await;
 
     let _ = join(runner.run(), async {
@@ -152,7 +152,7 @@ pub async fn run(
             .await
             .unwrap();
 
-        let mut s = arrayvec::ArrayString::<40>::from("Connected!").unwrap();
+        let s = arrayvec::ArrayString::<40>::from("Connected!").unwrap();
         channel.send(s).await;
 
         let _ = join(client.task(), async {
@@ -209,7 +209,7 @@ pub async fn run(
                         let msg = spark_message::AppToSparkMsg::SetHardwarePreset(1);
                         let mut blocks = encoder.encode(msg);
 
-                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 1").unwrap();
+                        let s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 1").unwrap();
                         channel.send(s).await;
                         for block in &mut blocks {
                             defmt::info!("write characteristic\n{:X}", block[..]);
@@ -220,7 +220,7 @@ pub async fn run(
                         let msg = spark_message::AppToSparkMsg::SetHardwarePreset(2);
                         let mut blocks = encoder.encode(msg);
 
-                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 2").unwrap();
+                        let s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 2").unwrap();
                         channel.send(s).await;
                         for block in &mut blocks {
                             defmt::info!("write characteristic\n{:X}", block[..]);
@@ -230,7 +230,7 @@ pub async fn run(
                         let msg = spark_message::AppToSparkMsg::SetHardwarePreset(3);
                         let mut blocks = encoder.encode(msg);
 
-                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 3").unwrap();
+                        let s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 3").unwrap();
                         channel.send(s).await;
                         for block in &mut blocks {
                             defmt::info!("write characteristic\n{:X}", block[..]);
@@ -240,7 +240,7 @@ pub async fn run(
                         let msg = spark_message::AppToSparkMsg::SetHardwarePreset(4);
                         let mut blocks = encoder.encode(msg);
 
-                        let mut s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 4").unwrap();
+                        let s = arrayvec::ArrayString::<40>::from("Set Hardware\npreset: 4").unwrap();
                         channel.send(s).await;
                         for block in &mut blocks {
                             defmt::info!("write characteristic\n{:X}", block[..]);
